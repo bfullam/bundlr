@@ -11,12 +11,14 @@ import { Address } from "~~/components/scaffold-eth";
 const Home: NextPage = () => {
   const { address } = useAccount();
 
+  // Constants
+  const anvilDefaultAccount = privateKeyToAccount("0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80");
   const TOKEN_CONTRACT = "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9";
   const TOKEN_ID = "1";
 
   const walletClient: WalletClient = createWalletClient({
     chain: foundry,
-    account: privateKeyToAccount("0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"),
+    account: anvilDefaultAccount,
     transport: http(),
   });
   console.log(walletClient);
@@ -37,7 +39,7 @@ const Home: NextPage = () => {
   const fundTBA = async () => {
     if (!walletClient || !address) return;
     await walletClient.sendTransaction({
-      account: privateKeyToAccount("0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"),
+      account: anvilDefaultAccount,
       to: tokenBoundAccount,
       value: parseEther("1.0"),
       chain: foundry,
@@ -69,7 +71,7 @@ const Home: NextPage = () => {
     if (isAccountDeployed) {
       const executedTransfer = await tokenboundClient.transferETH({
         account: tokenBoundAccount,
-        recipientAddress: "0x70997970C51812dc3A010C7d01b50e0d17dc79C8",
+        recipientAddress: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
         amount: 0.1,
       });
       console.log(executedTransfer);
