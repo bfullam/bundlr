@@ -3,6 +3,7 @@ pragma solidity ^0.8.19;
 
 import "../contracts/YourContract.sol";
 import "./DeployHelpers.s.sol";
+import {MyNFT} from "../contracts/MyNFT.sol";
 
 contract DeployScript is ScaffoldETHDeploy {
     error InvalidPrivateKey(string);
@@ -15,12 +16,18 @@ contract DeployScript is ScaffoldETHDeploy {
             );
         }
         vm.startBroadcast(deployerPrivateKey);
-        YourContract yourContract =
-            new YourContract(vm.addr(deployerPrivateKey));
+        YourContract yourContract = new YourContract(
+            vm.addr(deployerPrivateKey)
+        );
         console.logString(
             string.concat(
-                "YourContract deployed at: ", vm.toString(address(yourContract))
+                "YourContract deployed at: ",
+                vm.toString(address(yourContract))
             )
+        );
+        MyNFT myNFT = new MyNFT();
+        console.logString(
+            string.concat("MyNFT deployed at: ", vm.toString(address(myNFT)))
         );
         vm.stopBroadcast();
 

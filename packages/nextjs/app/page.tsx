@@ -1,13 +1,80 @@
 "use client";
 
-import Link from "next/link";
+import { TokenboundClient } from "@tokenbound/sdk";
 import type { NextPage } from "next";
+import { WalletClient, createWalletClient, http, parseEther } from "viem";
+import { privateKeyToAccount } from "viem/accounts";
+import { foundry } from "viem/chains";
 import { useAccount } from "wagmi";
-import { BugAntIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import { Address } from "~~/components/scaffold-eth";
 
 const Home: NextPage = () => {
-  const { address: connectedAddress } = useAccount();
+  const { address } = useAccount();
+
+  const TOKEN_CONTRACT = "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9";
+  const TOKEN_ID = "1";
+
+  const walletClient: WalletClient = createWalletClient({
+    chain: foundry,
+    account: privateKeyToAccount("0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"),
+    transport: http(),
+  });
+  console.log(walletClient);
+
+  const tokenboundClient = new TokenboundClient({
+    walletClient,
+    chain: foundry,
+    implementationAddress: "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
+  });
+
+  const tokenBoundAccount = tokenboundClient.getAccount({
+    tokenContract: TOKEN_CONTRACT,
+    tokenId: TOKEN_ID,
+  });
+
+  console.log(tokenBoundAccount);
+
+  const fundTBA = async () => {
+    if (!walletClient || !address) return;
+    await walletClient.sendTransaction({
+      account: privateKeyToAccount("0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"),
+      to: tokenBoundAccount,
+      value: parseEther("1.0"),
+      chain: foundry,
+    });
+    console.log(`funded TBA ${tokenBoundAccount} with 1 ETH`);
+  };
+
+  const createAccount = async () => {
+    if (!tokenboundClient || !address) return;
+    const createdAccount = await tokenboundClient.createAccount({
+      tokenContract: TOKEN_CONTRACT,
+      tokenId: TOKEN_ID,
+    });
+    console.log(createdAccount);
+  };
+
+  const transferETH = async () => {
+    if (!tokenboundClient || !address) return;
+    const isAccountDeployed = await tokenboundClient.checkAccountDeployment({
+      accountAddress: tokenBoundAccount,
+    });
+    console.log("IS DEPLOYED?", isAccountDeployed);
+
+    const isValidSigner = await tokenboundClient.isValidSigner({
+      account: tokenBoundAccount,
+    });
+    console.log("isValidSigner?", isValidSigner);
+
+    if (isAccountDeployed) {
+      const executedTransfer = await tokenboundClient.transferETH({
+        account: tokenBoundAccount,
+        recipientAddress: "0x70997970C51812dc3A010C7d01b50e0d17dc79C8",
+        amount: 0.1,
+      });
+      console.log(executedTransfer);
+    }
+  };
 
   return (
     <>
@@ -19,50 +86,13 @@ const Home: NextPage = () => {
           </h1>
           <div className="flex justify-center items-center space-x-2">
             <p className="my-2 font-medium">Connected Address:</p>
-            <Address address={connectedAddress} />
+            <Address address={address} />
           </div>
-          <p className="text-center text-lg">
-            Get started by editing{" "}
-            <code className="italic bg-base-300 text-base font-bold max-w-full break-words break-all inline-block">
-              packages/nextjs/app/page.tsx
-            </code>
-          </p>
-          <p className="text-center text-lg">
-            Edit your smart contract{" "}
-            <code className="italic bg-base-300 text-base font-bold max-w-full break-words break-all inline-block">
-              YourContract.sol
-            </code>{" "}
-            in{" "}
-            <code className="italic bg-base-300 text-base font-bold max-w-full break-words break-all inline-block">
-              packages/hardhat/contracts
-            </code>
-          </p>
         </div>
 
-        <div className="flex-grow bg-base-300 w-full mt-16 px-8 py-12">
-          <div className="flex justify-center items-center gap-12 flex-col sm:flex-row">
-            <div className="flex flex-col bg-base-100 px-10 py-10 text-center items-center max-w-xs rounded-3xl">
-              <BugAntIcon className="h-8 w-8 fill-secondary" />
-              <p>
-                Tinker with your smart contract using the{" "}
-                <Link href="/debug" passHref className="link">
-                  Debug Contracts
-                </Link>{" "}
-                tab.
-              </p>
-            </div>
-            <div className="flex flex-col bg-base-100 px-10 py-10 text-center items-center max-w-xs rounded-3xl">
-              <MagnifyingGlassIcon className="h-8 w-8 fill-secondary" />
-              <p>
-                Explore your local transactions with the{" "}
-                <Link href="/blockexplorer" passHref className="link">
-                  Block Explorer
-                </Link>{" "}
-                tab.
-              </p>
-            </div>
-          </div>
-        </div>
+        <button onClick={() => fundTBA()}>FUND TBA</button>
+        <button onClick={() => createAccount()}>CREATE ACCOUNT</button>
+        <button onClick={() => transferETH()}>TRANSFER ETH</button>
       </div>
     </>
   );
