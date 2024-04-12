@@ -95,9 +95,24 @@ const Home: NextPage = () => {
           </div>
         </div>
 
-        <button onClick={() => fundTBA()}>FUND TBA</button>
-        <button onClick={() => createAccount()}>CREATE ACCOUNT</button>
-        <button onClick={() => transferETH()}>TRANSFER ETH</button>
+        <button
+          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mt-5"
+          onClick={() => fundTBA()}
+        >
+          FUND TBA
+        </button>
+        <button
+          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mt-5"
+          onClick={() => createAccount()}
+        >
+          CREATE ACCOUNT
+        </button>
+        <button
+          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mt-5"
+          onClick={() => transferETH()}
+        >
+          TRANSFER ETH
+        </button>
       </div>
     </>
   );
