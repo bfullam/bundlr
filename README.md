@@ -1,3 +1,21 @@
+# 🎁 Bundlr
+
+In order to run this project locally, you must have an ERC-6551 Registry contract deployed. See Tokenbound docs <a href="https://docs.tokenbound.org/guides/deploy-registry">here</a>
+
+To test ERC-6551 implementation:
+
+1. Yarn chain
+2. Deploy ERC-6551 Registry contract as in docs linked above
+3. Yarn deploy
+4. Get funds from faucet for burner account
+5. In "debug contracts" tab
+  5a. select "MyNFT"
+  5b. safeMint to controlled address with tokenId set to 1
+6. In "home" tab (check console logs and block explorer for records of operations below)
+  6a. Click "Fund TBA" to send 10 ETH from the Anvil default account to the Token Bound Account
+  6b. Click "Create Account" to register Token Bound Account in the Registry
+  6c. Click "Transfer ETH" to transfer 1 ETH back to the Anvil default account
+
 # 🏗 Scaffold-ETH 2
 
 <h4 align="center">
