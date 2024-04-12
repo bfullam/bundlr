@@ -49,6 +49,19 @@ const deployedContracts = {
         },
         {
           type: "function",
+          name: "fund",
+          inputs: [],
+          outputs: [
+            {
+              name: "",
+              type: "uint256",
+              internalType: "uint256",
+            },
+          ],
+          stateMutability: "payable",
+        },
+        {
+          type: "function",
           name: "isValidSignature",
           inputs: [
             {

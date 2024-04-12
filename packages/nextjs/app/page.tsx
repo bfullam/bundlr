@@ -7,14 +7,18 @@ import { privateKeyToAccount } from "viem/accounts";
 import { foundry } from "viem/chains";
 import { useAccount } from "wagmi";
 import { Address } from "~~/components/scaffold-eth";
+import { useDeployedContractInfo } from "~~/hooks/scaffold-eth";
 
 const Home: NextPage = () => {
   const { address } = useAccount();
+  const ERC6551AccountContractInfo = useDeployedContractInfo("ERC6551Account");
+  const MyNftContractInfo = useDeployedContractInfo("MyNFT");
 
   // Constants
   const anvilDefaultAddress = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266";
   const anvilDefaultAccount = privateKeyToAccount("0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80");
-  const TOKEN_CONTRACT = "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0";
+  const IMPLEMENTATION_CONTRACT = ERC6551AccountContractInfo?.data?.address;
+  const TOKEN_CONTRACT = MyNftContractInfo?.data?.address;
   const TOKEN_ID = "1";
 
   const walletClient: WalletClient = createWalletClient({
@@ -22,23 +26,23 @@ const Home: NextPage = () => {
     account: anvilDefaultAccount,
     transport: http(),
   });
-  console.log(walletClient);
 
-  const tokenboundClient = new TokenboundClient({
-    walletClient,
-    chain: foundry,
-    implementationAddress: "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
-  });
-
-  const tokenBoundAccount = tokenboundClient.getAccount({
-    tokenContract: TOKEN_CONTRACT,
-    tokenId: TOKEN_ID,
-  });
-
-  console.log(tokenBoundAccount);
+  let tokenboundClient: TokenboundClient;
+  let tokenBoundAccount: `0x${string}`;
+  if (IMPLEMENTATION_CONTRACT && TOKEN_CONTRACT) {
+    tokenboundClient = new TokenboundClient({
+      walletClient,
+      chain: foundry,
+      implementationAddress: IMPLEMENTATION_CONTRACT,
+    });
+    tokenBoundAccount = tokenboundClient.getAccount({
+      tokenContract: TOKEN_CONTRACT,
+      tokenId: TOKEN_ID,
+    });
+  }
 
   const fundTBA = async () => {
-    if (!walletClient || !address) return;
+    if (!walletClient || !tokenBoundAccount) return;
     await walletClient.sendTransaction({
       account: anvilDefaultAccount,
       to: tokenBoundAccount,
@@ -49,7 +53,7 @@ const Home: NextPage = () => {
   };
 
   const createAccount = async () => {
-    if (!tokenboundClient || !address) return;
+    if (!tokenboundClient || !TOKEN_CONTRACT) return;
     const createdAccount = await tokenboundClient.createAccount({
       tokenContract: TOKEN_CONTRACT,
       tokenId: TOKEN_ID,
@@ -58,7 +62,7 @@ const Home: NextPage = () => {
   };
 
   const transferETH = async () => {
-    if (!tokenboundClient || !address) return;
+    if (!tokenboundClient || !tokenBoundAccount) return;
     const isAccountDeployed = await tokenboundClient.checkAccountDeployment({
       accountAddress: tokenBoundAccount,
     });
