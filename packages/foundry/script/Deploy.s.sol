@@ -29,7 +29,11 @@ contract DeployScript is ScaffoldETHDeploy {
             )
         );
 
-        MyNFT myNFT = new MyNFT();
+        MyNFT myNFT = new MyNFT(
+            address(erc6551Account),
+            address(erc6551Registry),
+            1 ether
+        );
         console.logString(
             string.concat("MyNFT deployed at: ", vm.toString(address(myNFT)))
         );
