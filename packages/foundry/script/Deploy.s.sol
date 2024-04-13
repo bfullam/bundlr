@@ -4,9 +4,13 @@ pragma solidity ^0.8.19;
 import "./DeployHelpers.s.sol";
 import {MyNFT} from "../contracts/MyNFT.sol";
 import {ERC6551Account} from "../contracts/ERC6551Account.sol";
+import {IERC6551Registry} from "erc6551/src/interfaces/IERC6551Registry.sol";
 
 contract DeployScript is ScaffoldETHDeploy {
     error InvalidPrivateKey(string);
+
+    IERC6551Registry erc6551Registry =
+        IERC6551Registry(0x000000006551c19487814612e58FE06813775758);
 
     function run() external {
         uint256 deployerPrivateKey = setupLocalhostEnv();
