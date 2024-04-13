@@ -67,5 +67,4 @@ contract MyNFT is ERC721 {
         require(msg.value >= price, "Insufficient funds");
         _safeMint(msg.sender, ++totalSupply);
     }
-    }
 }
