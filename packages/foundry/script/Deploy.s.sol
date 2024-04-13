@@ -1,7 +1,6 @@
 //SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import "../contracts/YourContract.sol";
 import "./DeployHelpers.s.sol";
 import {MyNFT} from "../contracts/MyNFT.sol";
 import {ERC6551Account} from "../contracts/ERC6551Account.sol";
