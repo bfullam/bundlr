@@ -2,8 +2,7 @@
 
 import { TokenboundClient } from "@tokenbound/sdk";
 import type { NextPage } from "next";
-import { WalletClient, createWalletClient, http, parseEther } from "viem";
-import { privateKeyToAccount } from "viem/accounts";
+import { WalletClient, createPublicClient, createWalletClient, custom, parseEther } from "viem";
 import { foundry } from "viem/chains";
 import { useAccount } from "wagmi";
 import { Address } from "~~/components/scaffold-eth";
@@ -12,19 +11,25 @@ import { useDeployedContractInfo } from "~~/hooks/scaffold-eth";
 const Home: NextPage = () => {
   const { address } = useAccount();
   const ERC6551AccountContractInfo = useDeployedContractInfo("ERC6551Account");
-  const MyNftContractInfo = useDeployedContractInfo("MyNFT");
+  const BundlrNftContractInfo = useDeployedContractInfo("BundlrNft");
+  const MyTokenContractInfo = useDeployedContractInfo("MyToken");
 
   // Constants
   const anvilDefaultAddress = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266";
-  const anvilDefaultAccount = privateKeyToAccount("0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80");
   const IMPLEMENTATION_CONTRACT = ERC6551AccountContractInfo?.data?.address;
-  const TOKEN_CONTRACT = MyNftContractInfo?.data?.address;
+  const TOKEN_CONTRACT = BundlrNftContractInfo?.data?.address;
   const TOKEN_ID = "1";
+
+  const publicClient = createPublicClient({
+    chain: foundry,
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    transport: custom(window.ethereum!),
+  });
 
   const walletClient: WalletClient = createWalletClient({
     chain: foundry,
-    account: anvilDefaultAccount,
-    transport: http(),
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    transport: custom(window.ethereum!),
   });
 
   let tokenboundClient: TokenboundClient;
@@ -44,7 +49,7 @@ const Home: NextPage = () => {
   const fundTBA = async () => {
     if (!walletClient || !tokenBoundAccount) return;
     await walletClient.sendTransaction({
-      account: anvilDefaultAccount,
+      account: anvilDefaultAddress,
       to: tokenBoundAccount,
       value: parseEther("10.0"),
       chain: foundry,
@@ -85,6 +90,20 @@ const Home: NextPage = () => {
     }
   };
 
+  const approveTokens = async () => {
+    if (!MyTokenContractInfo?.data?.address || !MyTokenContractInfo?.data?.abi) return;
+    const { request } = await publicClient.simulateContract({
+      address: MyTokenContractInfo?.data?.address,
+      abi: MyTokenContractInfo?.data?.abi,
+      functionName: "approve",
+      account: anvilDefaultAddress,
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      args: [TOKEN_CONTRACT!, BigInt(10000000000000000000)],
+    });
+    await walletClient.writeContract(request);
+    console.log(`Approved tokens to ${anvilDefaultAddress}`);
+  };
+
   return (
     <>
       <div className="flex items-center flex-col flex-grow pt-10">
@@ -116,6 +135,12 @@ const Home: NextPage = () => {
           onClick={() => transferETH()}
         >
           TRANSFER ETH
+        </button>
+        <button
+          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mt-5"
+          onClick={() => approveTokens()}
+        >
+          APPROVE TOKENS
         </button>
       </div>
     </>
