@@ -9,7 +9,7 @@ To test ERC-6551 implementation:
 3. Yarn deploy
 4. Get funds from faucet for burner account
 5. In "debug contracts" tab
-  <br/>5a. select "MyNFT"
+  <br/>5a. select "MyNft"
   <br/>5b. safeMint to controlled address with tokenId set to 1
 6. In "home" tab (check console logs and block explorer for records of operations below)
   <br/>6a. Click "Fund TBA" to send 10 ETH from the Anvil default account to the Token Bound Account
