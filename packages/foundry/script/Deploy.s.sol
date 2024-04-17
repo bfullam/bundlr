@@ -23,32 +23,32 @@ contract DeployScript is ScaffoldETHDeploy {
         }
         vm.startBroadcast(deployerPrivateKey);
 
-        // ERC6551Account erc6551Account = new ERC6551Account();
-        // console.logString(
-        //     string.concat(
-        //         "ERC6551Account deployed at: ",
-        //         vm.toString(address(erc6551Account))
-        //     )
-        // );
+        ERC6551Account erc6551Account = new ERC6551Account();
+        console.logString(
+            string.concat(
+                "ERC6551Account deployed at: ",
+                vm.toString(address(erc6551Account))
+            )
+        );
 
-        // BundlrNft bundlrNft = new BundlrNft(
-        //     address(erc6551Account),
-        //     address(erc6551Registry)
-        // );
-        // console.logString(
-        //     string.concat(
-        //         "BundlrNft deployed at: ",
-        //         vm.toString(address(bundlrNft))
-        //     )
-        // );
+        BundlrNft bundlrNft = new BundlrNft(
+            address(erc6551Account),
+            address(erc6551Registry)
+        );
+        console.logString(
+            string.concat(
+                "BundlrNft deployed at: ",
+                vm.toString(address(bundlrNft))
+            )
+        );
 
-        // MyToken myToken = new MyToken("MyToken", "MTK1", 100);
-        // console.logString(
-        //     string.concat(
-        //         "MyToken deployed at: ",
-        //         vm.toString(address(myToken))
-        //     )
-        // );
+        MyToken myToken = new MyToken("MyToken", "MTK1", 100);
+        console.logString(
+            string.concat(
+                "MyToken deployed at: ",
+                vm.toString(address(myToken))
+            )
+        );
 
         SingleSwap singleSwap = new SingleSwap();
         console.logString(

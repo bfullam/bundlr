@@ -7,26 +7,32 @@ import "erc6551/src/interfaces/IERC6551Registry.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-// import {ISwapRouter} from "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
-
-// address constant SWAP_ROUTER = 0xEf1c6E67703c7BD7107eed8303Fbe6EC2554BF6B;
-// address constant WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
-// address constant USDC = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
+address constant SWAP_ROUTER = 0x2E6cd2d30aa43f40aa81619ff4b6E0a41479B13F;
+address constant WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
+address constant USDC = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
+address constant WBTC = 0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599;
 
 contract BundlrNft is ERC721 {
     /*//////////////////////////////////////////////////////////////
+                            STRUCTS
+    //////////////////////////////////////////////////////////////*/
+    struct Allocation {
+        address token;
+        uint24 percentage;
+        uint24 poolFee;
+    }
+    /*//////////////////////////////////////////////////////////////
                             STATE VARIABLES
     //////////////////////////////////////////////////////////////*/
-    // ISwapRouter private constant swapRouter = ISwapRouter(SWAP_ROUTER);
-    // IERC20 private constant weth = IERC20(WETH);
-    // IERC20 private constant usdc = IERC20(USDC);
-    // uint24 public constant poolFee = 3000;
+    ISwapRouter private constant swapRouter = ISwapRouter(SWAP_ROUTER);
+    IERC20 private constant usdc = IERC20(USDC);
     uint256 public totalSupply; // The total number of tokens minted on this contract
     address public immutable implementation; // The ERC6551Implementation address
     IERC6551Registry public immutable registry; // The 6551 registry address
     uint public immutable chainId = block.chainid; // The chainId of the network this contract is deployed on
     address public immutable tokenContract = address(this); // The address of this contract
-    bytes32 salt = 0; // The salt used to generate the account address
+    bytes32 private constant salt = 0; // The salt used to generate the account address
+    Allocation[] private allocations; // The allocations for the tokenbound account
 
     /*//////////////////////////////////////////////////////////////
                               CONSTRUCTOR
@@ -37,6 +43,12 @@ contract BundlrNft is ERC721 {
     ) ERC721("myNft", "NFT") {
         implementation = _implementation;
         registry = IERC6551Registry(_registry);
+        allocations.push(
+            Allocation({token: WBTC, percentage: 50, poolFee: 500})
+        );
+        allocations.push(
+            Allocation({token: USDC, percentage: 50, poolFee: 3000})
+        );
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -74,46 +86,84 @@ contract BundlrNft is ERC721 {
         _safeMint(msg.sender, ++totalSupply);
     }
 
-    // // Fund the tokenbound account with ERC20 tokens
-    // function fund()
-    //     external
-    //     payable
-    //     returns (
-    //         // uint256 amountIn,
-    //         // uint256 tokenId
-    //         uint256 amountOut
-    //     )
-    // {
-    //     // // Check for adequate allowance
-    //     // require(
-    //     //     usdc.allowance(msg.sender, address(this)) >= amountIn,
-    //     //     "Insufficient allowance"
-    //     // );
-    //     // // Transfer tokens from sender to this contract
-    //     // require(
-    //     //     usdc.transferFrom(msg.sender, address(this), amountIn),
-    //     //     "Transfer to NFT failed"
-    //     // );
+    // Fund the tokenbound account with ERC20 tokens
+    function fundWithEth(uint256 tokenId) external payable {
+        require(msg.value > 0, "Insufficient amount");
+        require(allocations.length > 0, "No allocations set");
+
+        // Create the tokenbound account address (or get it if it already exists)
+        address tokenBoundAccount = createAccount(tokenId);
+
+        // Loop through the allocations and swap the ETH for the tokens
+        for (uint i = 0; i < allocations.length; i++) {
+            Allocation memory a = allocations[i];
+            uint256 amountIn = (msg.value * a.percentage) / 100;
+            // Prepare the swap parameters
+            ISwapRouter.ExactInputSingleParams memory params = ISwapRouter
+                .ExactInputSingleParams({
+                    tokenIn: WETH,
+                    tokenOut: a.token,
+                    fee: a.poolFee,
+                    recipient: tokenBoundAccount,
+                    deadline: block.timestamp + 60,
+                    amountIn: amountIn,
+                    amountOutMinimum: 0,
+                    sqrtPriceLimitX96: 0
+                });
+            // The call to `exactInputSingle` executes the swap.
+            swapRouter.exactInputSingle{value: amountIn}(params);
+        }
+    }
+
+    // // Fund the tokenbound account with USDC
+    // function fundWithUSDC(
+    //     uint256 tokenId,
+    //     uint256 amountIn
+    // ) external payable returns (uint256 amountOut) {
+    //     // Check for adequate allowance
+    //     require(
+    //         usdc.allowance(msg.sender, address(this)) >= amountIn,
+    //         "Insufficient allowance"
+    //     );
+
+    //     // Transfer tokens from sender to this contract
+    //     require(
+    //         usdc.transferFrom(msg.sender, address(this), amountIn),
+    //         "Transfer to NFT failed"
+    //     );
+
     //     // Get the tokenbound account address
-    //     // address tokenBoundAccount = getAccount(tokenId);
-    //     // // Transfer tokens to the recipient
-    //     // require(
-    //     //     token.transfer(tokenBoundAccount, amountIn),
-    //     //     "Transfer to tokenbound account failed"
-    //     // );
-    //     // ISwapRouter.ExactInputSingleParams memory params = ISwapRouter
-    //     //     .ExactInputSingleParams({
-    //     //         tokenIn: WETH,
-    //     //         tokenOut: USDC,
-    //     //         fee: poolFee,
-    //     //         // recipient: tokenBoundAccount,
-    //     //         recipient: msg.sender,
-    //     //         deadline: block.timestamp,
-    //     //         amountIn: msg.value,
-    //     //         amountOutMinimum: 0,
-    //     //         sqrtPriceLimitX96: 0
-    //     //     });
+    //     address tokenBoundAccount = getAccount(tokenId);
+
+    //     ISwapRouter.ExactInputSingleParams memory params = ISwapRouter
+    //         .ExactInputSingleParams({
+    //             tokenIn: USDC,
+    //             tokenOut: USDC,
+    //             fee: poolFee,
+    //             recipient: tokenBoundAccount,
+    //             amountIn: msg.value,
+    //             amountOutMinimum: 0,
+    //             sqrtPriceLimitX96: 0
+    //         });
+
     //     // The call to `exactInputSingle` executes the swap.
-    //     // amountOut = swapRouter.exactInputSingle{value: msg.value}(params);
+    //     amountOut = swapRouter.exactInputSingle{value: msg.value}(params);
     // }
+}
+
+interface ISwapRouter {
+    struct ExactInputSingleParams {
+        address tokenIn;
+        address tokenOut;
+        uint24 fee;
+        address recipient;
+        uint256 deadline;
+        uint256 amountIn;
+        uint256 amountOutMinimum;
+        uint160 sqrtPriceLimitX96;
+    }
+
+    function exactInputSingle(
+        ExactInputSingleParams calldata params
+    ) external payable returns (uint256 amountOut);
 }
