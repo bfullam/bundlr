@@ -3,10 +3,8 @@ pragma solidity ^0.8.19;
 
 import "./DeployHelpers.s.sol";
 import {BundlrNft} from "../contracts/BundlrNft.sol";
-import {ERC6551Account} from "../contracts/ERC6551Account.sol";
+import {Bundle6551Implementation} from "../contracts/Bundle6551Implementation.sol";
 import {IERC6551Registry} from "erc6551/src/interfaces/IERC6551Registry.sol";
-import {MyToken} from "../contracts/MyToken.sol";
-import {SingleSwap} from "../contracts/SingleSwap.sol";
 
 contract DeployScript is ScaffoldETHDeploy {
     error InvalidPrivateKey(string);
@@ -23,38 +21,22 @@ contract DeployScript is ScaffoldETHDeploy {
         }
         vm.startBroadcast(deployerPrivateKey);
 
-        ERC6551Account erc6551Account = new ERC6551Account();
+        Bundle6551Implementation bundle6551Implementation = new Bundle6551Implementation();
         console.logString(
             string.concat(
                 "ERC6551Account deployed at: ",
-                vm.toString(address(erc6551Account))
+                vm.toString(address(bundle6551Implementation))
             )
         );
 
         BundlrNft bundlrNft = new BundlrNft(
-            address(erc6551Account),
+            address(bundle6551Implementation),
             address(erc6551Registry)
         );
         console.logString(
             string.concat(
                 "BundlrNft deployed at: ",
                 vm.toString(address(bundlrNft))
-            )
-        );
-
-        MyToken myToken = new MyToken("MyToken", "MTK1", 100);
-        console.logString(
-            string.concat(
-                "MyToken deployed at: ",
-                vm.toString(address(myToken))
-            )
-        );
-
-        SingleSwap singleSwap = new SingleSwap();
-        console.logString(
-            string.concat(
-                "SingleSwap deployed at: ",
-                vm.toString(address(singleSwap))
             )
         );
 

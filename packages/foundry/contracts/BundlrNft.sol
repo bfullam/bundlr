@@ -32,7 +32,7 @@ contract BundlrNft is ERC721 {
     uint public immutable chainId = block.chainid; // The chainId of the network this contract is deployed on
     address public immutable tokenContract = address(this); // The address of this contract
     bytes32 private constant salt = 0; // The salt used to generate the account address
-    Allocation[] private allocations; // The allocations for the tokenbound account
+    mapping(uint256 => Allocation[]) private tokenAllocations; // The allocations for each token
 
     /*//////////////////////////////////////////////////////////////
                               CONSTRUCTOR
@@ -43,12 +43,6 @@ contract BundlrNft is ERC721 {
     ) ERC721("myNft", "NFT") {
         implementation = _implementation;
         registry = IERC6551Registry(_registry);
-        allocations.push(
-            Allocation({token: WBTC, percentage: 50, poolFee: 500})
-        );
-        allocations.push(
-            Allocation({token: USDC, percentage: 50, poolFee: 3000})
-        );
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -65,6 +59,16 @@ contract BundlrNft is ERC721 {
             );
     }
 
+    function getAllocations(
+        uint256 tokenId
+    ) external view returns (Allocation[] memory) {
+        require(
+            tokenAllocations[tokenId].length > 0,
+            "No allocations set for this token"
+        );
+        return tokenAllocations[tokenId];
+    }
+
     function createAccount(uint tokenId) public returns (address) {
         return
             registry.createAccount(
@@ -76,27 +80,39 @@ contract BundlrNft is ERC721 {
             );
     }
 
-    function addEth(uint tokenId) external payable {
-        address account = getAccount(tokenId);
-        (bool success, ) = account.call{value: msg.value}("");
-        require(success, "Failed to send ETH");
+    function mint(Allocation[] calldata _allocations) external {
+        require(
+            _allocations.length > 0,
+            "At least one allocation must be provided"
+        );
+
+        uint256 totalPercentage;
+        for (uint256 i = 0; i < _allocations.length; i++) {
+            totalPercentage += _allocations[i].percentage;
+        }
+        require(
+            totalPercentage == 100,
+            "Invalid allocations, percentages must add up to 100%"
+        );
+
+        uint256 tokenId = ++totalSupply;
+        _safeMint(msg.sender, tokenId);
+        for (uint256 i = 0; i < _allocations.length; i++) {
+            tokenAllocations[tokenId].push(_allocations[i]);
+        }
     }
 
-    function mint() external payable {
-        _safeMint(msg.sender, ++totalSupply);
-    }
-
-    // Fund the tokenbound account with ERC20 tokens
+    // Swap ETH for tokens defined in the allocations and send them to the tokenbound account
     function fundWithEth(uint256 tokenId) external payable {
-        require(msg.value > 0, "Insufficient amount");
-        require(allocations.length > 0, "No allocations set");
+        require(msg.value > 0, "Insufficient ETH sent, must be greater than 0");
+        require(tokenAllocations[tokenId].length > 0, "No allocations set");
 
         // Create the tokenbound account address (or get it if it already exists)
         address tokenBoundAccount = createAccount(tokenId);
 
         // Loop through the allocations and swap the ETH for the tokens
-        for (uint i = 0; i < allocations.length; i++) {
-            Allocation memory a = allocations[i];
+        for (uint i = 0; i < tokenAllocations[tokenId].length; i++) {
+            Allocation memory a = tokenAllocations[tokenId][i];
             uint256 amountIn = (msg.value * a.percentage) / 100;
             // Prepare the swap parameters
             ISwapRouter.ExactInputSingleParams memory params = ISwapRouter
@@ -149,6 +165,26 @@ contract BundlrNft is ERC721 {
     //     // The call to `exactInputSingle` executes the swap.
     //     amountOut = swapRouter.exactInputSingle{value: msg.value}(params);
     // }
+
+    function unbundle(uint256 tokenId) external {
+        require(
+            ownerOf(tokenId) == msg.sender,
+            "Bundle6551Implementation: Only the NFT owner can unbundle"
+        );
+
+        address tokenBoundAccount = getAccount(tokenId);
+
+        address[] memory addressesOfAllocatedTokens = new address[](
+            tokenAllocations[tokenId].length
+        );
+        for (uint256 i = 0; i < tokenAllocations[tokenId].length; i++) {
+            addressesOfAllocatedTokens[i] = tokenAllocations[tokenId][i].token;
+        }
+
+        IBundle6551Implementation(tokenBoundAccount).unbundle(
+            addressesOfAllocatedTokens
+        );
+    }
 }
 
 interface ISwapRouter {
@@ -166,4 +202,8 @@ interface ISwapRouter {
     function exactInputSingle(
         ExactInputSingleParams calldata params
     ) external payable returns (uint256 amountOut);
+}
+
+interface IBundle6551Implementation {
+    function unbundle(address[] calldata _tokens) external;
 }
