@@ -24,7 +24,7 @@ contract DeployScript is ScaffoldETHDeploy {
         Bundle6551Implementation bundle6551Implementation = new Bundle6551Implementation();
         console.logString(
             string.concat(
-                "ERC6551Account deployed at: ",
+                "Bundle6551Implementation deployed at: ",
                 vm.toString(address(bundle6551Implementation))
             )
         );

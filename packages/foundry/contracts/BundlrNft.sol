@@ -8,8 +8,6 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 address constant SWAP_ROUTER = 0x2E6cd2d30aa43f40aa81619ff4b6E0a41479B13F;
 address constant WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
-address constant USDC = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
-address constant WBTC = 0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599;
 
 contract BundlrNft is ERC721 {
     /*//////////////////////////////////////////////////////////////
@@ -28,7 +26,6 @@ contract BundlrNft is ERC721 {
                             STATE VARIABLES
     //////////////////////////////////////////////////////////////*/
     ISwapRouter private constant swapRouter = ISwapRouter(SWAP_ROUTER);
-    IERC20 private constant usdc = IERC20(USDC);
     uint256 public totalSupply; // The total number of tokens minted on this contract
     address public immutable implementation; // The ERC6551Implementation address
     IERC6551Registry public immutable registry; // The 6551 registry address
@@ -155,41 +152,6 @@ contract BundlrNft is ERC721 {
             swapRouter.exactInputSingle{value: amountIn}(params);
         }
     }
-
-    // // Fund the tokenbound account with USDC
-    // function fundWithUSDC(
-    //     uint256 tokenId,
-    //     uint256 amountIn
-    // ) external payable returns (uint256 amountOut) {
-    //     // Check for adequate allowance
-    //     require(
-    //         usdc.allowance(msg.sender, address(this)) >= amountIn,
-    //         "Insufficient allowance"
-    //     );
-
-    //     // Transfer tokens from sender to this contract
-    //     require(
-    //         usdc.transferFrom(msg.sender, address(this), amountIn),
-    //         "Transfer to NFT failed"
-    //     );
-
-    //     // Get the tokenbound account address
-    //     address tokenBoundAccount = getAccount(tokenId);
-
-    //     ISwapRouter.ExactInputSingleParams memory params = ISwapRouter
-    //         .ExactInputSingleParams({
-    //             tokenIn: USDC,
-    //             tokenOut: USDC,
-    //             fee: poolFee,
-    //             recipient: tokenBoundAccount,
-    //             amountIn: msg.value,
-    //             amountOutMinimum: 0,
-    //             sqrtPriceLimitX96: 0
-    //         });
-
-    //     // The call to `exactInputSingle` executes the swap.
-    //     amountOut = swapRouter.exactInputSingle{value: msg.value}(params);
-    // }
 
     function unbundle(uint256 tokenId) external {
         require(
