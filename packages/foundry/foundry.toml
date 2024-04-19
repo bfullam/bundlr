@@ -27,6 +27,7 @@ zkSyncTestnet = "https://testnet.era.zksync.dev"
 zkSync = "https://mainnet.era.zksync.io"
 scrollSepolia = "https://sepolia-rpc.scroll.io"
 scroll = "https://rpc.scroll.io"
+linea="https://rpc.linea.build"
 
 [etherscan]
 polygonMumbai = { key = "${ETHERSCAN_API_KEY}" }
