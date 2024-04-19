@@ -137,6 +137,17 @@ contract Bundle6551Implementation is IERC165, IERC6551Account, IERC721Receiver {
         emit BundleUnbundled(owner());
     }
 
+    function getTokenBalances(
+        address[] calldata _tokens
+    ) external view returns (uint256[] memory) {
+        uint256[] memory balances = new uint256[](_tokens.length);
+        for (uint256 i = 0; i < _tokens.length; i++) {
+            IERC20 _token = IERC20(_tokens[i]);
+            balances[i] = _token.balanceOf(address(this));
+        }
+        return balances;
+    }
+
     function state() external view override returns (uint256) {}
 
     function isValidSigner(

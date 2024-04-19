@@ -4,7 +4,6 @@ pragma solidity ^0.8.19;
 import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "erc6551/src/lib/ERC6551AccountLib.sol";
 import "erc6551/src/interfaces/IERC6551Registry.sol";
-import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 address constant SWAP_ROUTER = 0x2E6cd2d30aa43f40aa81619ff4b6E0a41479B13F;
@@ -20,6 +19,10 @@ contract BundlrNft is ERC721 {
         address token;
         uint24 percentage;
         uint24 poolFee;
+    }
+    struct AllocationBalance {
+        address token;
+        uint256 balance;
     }
     /*//////////////////////////////////////////////////////////////
                             STATE VARIABLES
@@ -40,7 +43,7 @@ contract BundlrNft is ERC721 {
     constructor(
         address _implementation,
         address _registry
-    ) ERC721("myNft", "NFT") {
+    ) ERC721("BundlrNft", "BNDLR") {
         implementation = _implementation;
         registry = IERC6551Registry(_registry);
     }
@@ -67,6 +70,28 @@ contract BundlrNft is ERC721 {
             "No allocations set for this token"
         );
         return tokenAllocations[tokenId];
+    }
+
+    function getAllocationBalances(
+        uint256 tokenId
+    ) external view returns (AllocationBalance[] memory) {
+        require(
+            tokenAllocations[tokenId].length > 0,
+            "No allocations set for this token"
+        );
+
+        AllocationBalance[] memory balances = new AllocationBalance[](
+            tokenAllocations[tokenId].length
+        );
+        for (uint256 i = 0; i < tokenAllocations[tokenId].length; i++) {
+            balances[i] = AllocationBalance({
+                token: tokenAllocations[tokenId][i].token,
+                balance: IERC20(tokenAllocations[tokenId][i].token).balanceOf(
+                    getAccount(tokenId)
+                )
+            });
+        }
+        return balances;
     }
 
     function createAccount(uint tokenId) public returns (address) {
