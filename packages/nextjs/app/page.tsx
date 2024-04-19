@@ -1,8 +1,8 @@
 "use client";
 
-import { TokenboundClient } from "@tokenbound/sdk";
 import type { NextPage } from "next";
-import { WalletClient, createWalletClient, custom, parseEther } from "viem";
+import { WalletClient, createPublicClient, createWalletClient, custom, http, parseEther } from "viem";
+import { privateKeyToAccount } from "viem/accounts";
 import { foundry } from "viem/chains";
 import { useAccount } from "wagmi";
 import { Address } from "~~/components/scaffold-eth";
@@ -10,98 +10,71 @@ import { useDeployedContractInfo } from "~~/hooks/scaffold-eth";
 
 const Home: NextPage = () => {
   const { address } = useAccount();
-  const ERC6551AccountContractInfo = useDeployedContractInfo("Bundle6551Implementation");
   const BundlrNftContractInfo = useDeployedContractInfo("BundlrNft");
 
   // Constants
   const anvilDefaultAddress = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266";
-  const IMPLEMENTATION_CONTRACT = ERC6551AccountContractInfo?.data?.address;
   const TOKEN_CONTRACT = BundlrNftContractInfo?.data?.address;
   const TOKEN_ID = "1";
+  const anvilDefaultAccount = privateKeyToAccount("0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80");
 
-  // const publicClient = createPublicClient({
-  //   chain: foundry,
-  //   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  //   transport: custom(window.ethereum!),
-  // });
-
-  const walletClient: WalletClient = createWalletClient({
+  const publicClient = createPublicClient({
     chain: foundry,
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     transport: custom(window.ethereum!),
   });
 
-  let tokenboundClient: TokenboundClient;
-  let tokenBoundAccount: `0x${string}`;
-  if (IMPLEMENTATION_CONTRACT && TOKEN_CONTRACT) {
-    tokenboundClient = new TokenboundClient({
-      walletClient,
-      chain: foundry,
-      implementationAddress: IMPLEMENTATION_CONTRACT,
-    });
-    tokenBoundAccount = tokenboundClient.getAccount({
-      tokenContract: TOKEN_CONTRACT,
-      tokenId: TOKEN_ID,
-    });
-  }
+  const walletClient: WalletClient = createWalletClient({
+    account: anvilDefaultAccount,
+    chain: foundry,
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    transport: http(),
+  });
 
-  const fundTBA = async () => {
-    if (!walletClient || !tokenBoundAccount) return;
-    await walletClient.sendTransaction({
-      account: anvilDefaultAddress,
-      to: tokenBoundAccount,
-      value: parseEther("10.0"),
-      chain: foundry,
+  const mintNFT = async () => {
+    if (!TOKEN_CONTRACT || !BundlrNftContractInfo?.data?.abi) return;
+    const { request } = await publicClient.simulateContract({
+      account: anvilDefaultAccount,
+      address: TOKEN_CONTRACT,
+      abi: BundlrNftContractInfo?.data?.abi,
+      functionName: "mint",
+      args: [
+        [
+          { token: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", percentage: 50, poolFee: 3000 },
+          { token: "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599", percentage: 50, poolFee: 500 },
+        ],
+      ],
     });
-    console.log(`funded TBA ${tokenBoundAccount} with 10 ETH`);
+    await walletClient.writeContract(request);
+    console.log(`Minted NFT to ${anvilDefaultAddress}`);
   };
 
-  const createAccount = async () => {
-    if (!tokenboundClient || !TOKEN_CONTRACT) return;
-    const createdAccount = await tokenboundClient.createAccount({
-      tokenContract: TOKEN_CONTRACT,
-      tokenId: TOKEN_ID,
+  const fundNftWithEth = async () => {
+    if (!TOKEN_CONTRACT || !BundlrNftContractInfo?.data?.abi) return;
+    const { request } = await publicClient.simulateContract({
+      account: anvilDefaultAccount,
+      address: TOKEN_CONTRACT,
+      abi: BundlrNftContractInfo?.data?.abi,
+      functionName: "fundWithEth",
+      args: [BigInt(1)],
+      value: parseEther("1"),
     });
-    console.log(createdAccount);
+    await walletClient.writeContract(request);
+    console.log(`Funded NFT with 1 ETH`);
   };
 
-  const transferETH = async () => {
-    if (!tokenboundClient || !tokenBoundAccount) return;
-    const isAccountDeployed = await tokenboundClient.checkAccountDeployment({
-      accountAddress: tokenBoundAccount,
+  const unbundleNftAssets = async () => {
+    if (!TOKEN_CONTRACT || !BundlrNftContractInfo?.data?.abi) return;
+    const { request } = await publicClient.simulateContract({
+      account: anvilDefaultAccount,
+      address: TOKEN_CONTRACT,
+      abi: BundlrNftContractInfo?.data?.abi,
+      functionName: "unbundle",
+      args: [BigInt(TOKEN_ID)],
     });
-    console.log("IS DEPLOYED?", isAccountDeployed);
-
-    const isValidSigner = await tokenboundClient.isValidSigner({
-      account: tokenBoundAccount,
-    });
-    console.log("isValidSigner?", isValidSigner);
-
-    if (isAccountDeployed) {
-      const executedTransfer = await tokenboundClient.transferETH({
-        account: tokenBoundAccount,
-        recipientAddress: anvilDefaultAddress,
-        amount: 1,
-      });
-      console.log(
-        `Transfer hash ${executedTransfer} has transferred 1 ETH from ${tokenBoundAccount} to ${anvilDefaultAddress}`,
-      );
-    }
+    await walletClient.writeContract(request);
+    console.log(`Unbundled NFT ${TOKEN_ID}`);
   };
-
-  // const approveTokens = async () => {
-  //   if (!MyTokenContractInfo?.data?.address || !MyTokenContractInfo?.data?.abi) return;
-  //   const { request } = await publicClient.simulateContract({
-  //     address: MyTokenContractInfo?.data?.address,
-  //     abi: MyTokenContractInfo?.data?.abi,
-  //     functionName: "approve",
-  //     account: anvilDefaultAddress,
-  //     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  //     args: [TOKEN_CONTRACT!, BigInt(10000000000000000000)],
-  //   });
-  //   await walletClient.writeContract(request);
-  //   console.log(`Approved tokens to ${anvilDefaultAddress}`);
-  // };
 
   return (
     <>
@@ -119,28 +92,22 @@ const Home: NextPage = () => {
 
         <button
           className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mt-5"
-          onClick={() => fundTBA()}
+          onClick={() => mintNFT()}
         >
-          FUND TBA
+          MINT NFT
         </button>
         <button
           className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mt-5"
-          onClick={() => createAccount()}
+          onClick={() => fundNftWithEth()}
         >
-          CREATE ACCOUNT
+          FUND NFT ACCOUNT WITH 1 ETH (this is slow AF locally, but works on the testnet)
         </button>
         <button
           className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mt-5"
-          onClick={() => transferETH()}
+          onClick={() => unbundleNftAssets()}
         >
-          TRANSFER ETH
+          UNBUNDLE NFT ASSETS
         </button>
-        {/* <button
-          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mt-5"
-          onClick={() => approveTokens()}
-        >
-          APPROVE TOKENS
-        </button> */}
       </div>
     </>
   );

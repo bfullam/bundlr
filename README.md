@@ -5,16 +5,16 @@ In order to run this project locally, you must have an ERC-6551 Registry contrac
 To test ERC-6551 implementation:
 
 1. Yarn chain
-2. Deploy ERC-6551 Registry contract as in docs linked above
+2. Deploy ERC-6551 Registry contract as in <a href="https://docs.tokenbound.org/guides/deploy-registry">Tokenbound docs</a>
 3. Yarn deploy
-4. Get funds from faucet for burner account
-5. In "debug contracts" tab
-  <br/>5a. select "MyNft"
-  <br/>5b. safeMint to controlled address with tokenId set to 1
-6. In "home" tab (check console logs and block explorer for records of operations below)
-  <br/>6a. Click "Fund TBA" to send 10 ETH from the Anvil default account to the Token Bound Account
-  <br/>6b. Click "Create Account" to register Token Bound Account in the Registry
-  <br/>6c. Click "Transfer ETH" to transfer 1 ETH back to the Anvil default account
+
+Home page:
+1. Mint NFT
+  - Calls mint() on the NFT contract using the default Anvil account
+2. Fund with 1 ETH
+  - Calls fundWithEth() on the NFT contract, sending 1 ETH from default Anvil account and setting allocations of 50% USDC / 50% WBTC
+3. Unbundle
+  - Calls unbundle() on the NFT contract, returning all held assets to the NFT owner
 
 # 🏗 Scaffold-ETH 2
 
