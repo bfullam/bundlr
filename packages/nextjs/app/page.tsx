@@ -8,14 +8,16 @@ import { useChainId } from "wagmi";
 import { useScaffoldContractWrite } from "~~/hooks/scaffold-eth";
 
 const Home: NextPage = () => {
-  const chainId = useChainId();
   const [pairingTokens, setPairingTokens] = useState([]) as any[];
   const [pairingTokensChainId, setPairingTokensChainId] = useState() as any;
+
+  // Get the current chainId from the wagmi hook
+  const chainId = useChainId();
 
   // Mapping chainId to chainName so we can use the correct subgraph
   const chainIdToChainName: { [key: number]: string } = {
     1: "ethereum",
-    31337: "ethereum",
+    31337: "ethereum", // Foundry set to Ethereum subgraph for use when forking mainnet locally
     100: "gnosis",
     42161: "arbitrum",
   };
