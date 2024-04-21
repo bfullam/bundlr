@@ -15,11 +15,13 @@ contract BundlrNft is ERC721 {
     //////////////////////////////////////////////////////////////*/
     struct Allocation {
         address token;
+        string symbol;
         uint24 percentage;
         uint24 poolFee;
     }
     struct AllocationBalance {
         address token;
+        string symbol;
         uint256 balance;
     }
     /*//////////////////////////////////////////////////////////////
@@ -83,6 +85,7 @@ contract BundlrNft is ERC721 {
         for (uint256 i = 0; i < tokenAllocations[tokenId].length; i++) {
             balances[i] = AllocationBalance({
                 token: tokenAllocations[tokenId][i].token,
+                symbol: tokenAllocations[tokenId][i].symbol,
                 balance: IERC20(tokenAllocations[tokenId][i].token).balanceOf(
                     getAccount(tokenId)
                 )
@@ -91,25 +94,27 @@ contract BundlrNft is ERC721 {
         return balances;
     }
 
-    function getAllTokens(address owner) external view returns (uint256[] memory) {
-    uint256 tokenCount = balanceOf(owner); // Get the number of tokens owned by the address
-    uint256[] memory tokens = new uint256[](tokenCount); // Array to store token IDs
-    uint256 counter = 0; // Counter to track the number of tokens found
+    function getAllTokens(
+        address owner
+    ) external view returns (uint256[] memory) {
+        uint256 tokenCount = balanceOf(owner); // Get the number of tokens owned by the address
+        uint256[] memory tokens = new uint256[](tokenCount); // Array to store token IDs
+        uint256 counter = 0; // Counter to track the number of tokens found
 
-    // Iterate over all tokens minted (assuming `totalSupply` is the count of all tokens)
-    for (uint256 i = 1; i <= totalSupply; i++) {
-        if (ownerOf(i) == owner) {
-            tokens[counter] = i; // Store the token ID
-            counter++; // Increment the counter
-            // If we've added the correct number of tokens, we can stop early
-            if (counter == tokenCount) {
-                break;
+        // Iterate over all tokens minted (assuming `totalSupply` is the count of all tokens)
+        for (uint256 i = 1; i <= totalSupply; i++) {
+            if (ownerOf(i) == owner) {
+                tokens[counter] = i; // Store the token ID
+                counter++; // Increment the counter
+                // If we've added the correct number of tokens, we can stop early
+                if (counter == tokenCount) {
+                    break;
+                }
             }
         }
-    }
 
-    return tokens;
-}
+        return tokens;
+    }
 
     function createAccount(uint tokenId) public returns (address) {
         return
