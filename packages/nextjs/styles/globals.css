@@ -7,6 +7,10 @@
   background: oklch(var(--b2));
 }
 
+background {
+  color: #e2e8f0;
+}
+
 body {
   min-height: 100vh;
 }
