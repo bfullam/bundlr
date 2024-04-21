@@ -139,7 +139,6 @@ const Home: NextPage = () => {
       setSelectedTokens([...selectedTokens, { token: id, symbol, percentage: 50, poolFee: parseInt(fee) }]);
       setPercentageInputs([...percentageInputs, { token: id, percentage: 50 }]); // Initialize the percentage input for the selected token
     }
-    console.log("selectedtokens", selectedTokens);
   };
 
   const renderInputFields = () => {
@@ -172,9 +171,16 @@ const Home: NextPage = () => {
       const updatedInputs = [...percentageInputs];
       updatedInputs[index].percentage = e.target.value === "" ? 0 : newPercentage;
       setPercentageInputs(updatedInputs); // Update the percentage for the selected token
+
+      // Update the percentage for the corresponding token in selectedTokens array
+      const tokenIndex = selectedTokens.findIndex(token => token.token === updatedInputs[index].token);
+      if (tokenIndex !== -1) {
+        const updatedTokens = [...selectedTokens];
+        updatedTokens[tokenIndex].percentage = e.target.value === "" ? 0 : newPercentage;
+        setSelectedTokens(updatedTokens);
+      }
     }
   };
-
   // WRITE FUNCTIONS
   const {
     writeAsync: mintNFT,
