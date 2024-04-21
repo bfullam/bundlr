@@ -44,7 +44,7 @@ contract BundlrNft is ERC721 {
     constructor(
         address _implementation,
         address _registry
-    ) ERC721("BundlrNft", "BNDLR") {
+    ) ERC721("Bags", "BAGS") {
         implementation = _implementation;
         registry = IERC6551Registry(_registry);
     }
@@ -183,7 +183,7 @@ contract BundlrNft is ERC721 {
     function unbundle(uint256 tokenId) external {
         require(
             ownerOf(tokenId) == msg.sender,
-            "Bundle6551Implementation: Only the NFT owner can unbundle"
+            "Only the NFT owner can empty the account"
         );
 
         address tokenBoundAccount = getAccount(tokenId);
@@ -247,14 +247,12 @@ contract BundlrNft is ERC721 {
         uriParts[0] = string("data:application/json;base64,");
         uriParts[1] = string(
             abi.encodePacked(
-                '{"name":"Bundle #',
+                '{"name":"Bag #',
                 Strings.toString(tokenId),
                 '",',
                 '"description":"Bags are NFT owned accounts (6551) that accept ETH and swap into allocated tokens.",',
-                '"attributes":[{"trait_type":"Balance","value":"',
-                "skeet",
-                ' ETH"},{"trait_type":"Status","value":"Exists"}],',
-                '"image_data":"data:image/svg+xml;base64,'
+                '"attributes":[],',
+                '"image":"data:image/svg+xml;base64,'
             )
         );
         uriParts[2] = Base64.encode(
