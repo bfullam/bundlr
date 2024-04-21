@@ -1,4 +1,20 @@
-# 🎁 Bundlr
+# 🎁 Bags
+
+## Project Description
+Bags is shaking up the NFT game. Picture this: NFTs with their own wallets, calling the shots based on how you told them to manage your assets. Yep, that's Bags. Using the ERC-6551 standard, we're giving NFTs the power to manage their wallets, decide where incoming ETH goes, and convert it into tokens you choose.
+
+What's cool is, you get to set the rules when you mint your NFT. Want it split 50-50 between ETH and your favorite token? No problem. Plus, each NFT gets a unique look based on your choices, adding that personal touch.
+
+With Bags, it's not just about owning NFTs; it's about using them to streamline your investment strategy and simplify your wallet.
+
+## How it's Made
+The main ingredients: Love, sweat and tears. Built with extreme enjoyment (and stress) as my second foray into web3 hackathons. I had such a great time with this project!
+
+Technologies Used: Scaffold-Eth: The entirety of Bags is build on the skeleton of Scaffold-Eth. Token Swapping Protocol: For token swapping functionality, we integrated with Sushiswap. This allowed for easy conversion of incoming ETH into specified tokens across all the chains we wanted to support. ERC-6551: Bags relies heavily on the new ERC-6551 standard, which allows NFTs to own and control their own smart contract wallets.
+
+Notable "Hacky" Solutions: One notable aspect of our implementation is the dynamic generation of images based on the asset allocations. To do this, we generate custom SVG code for the tokenURI each time it's called. By doing this, we were able to make visually distinct images tailored to each NFT's unique settings. This "hacky" solution allowed us to add a personalized touch to each NFT without compromising scalability or performance.
+
+## Deploy
 
 In order to run this project locally, you must have an ERC-6551 Registry contract deployed. See Tokenbound docs <a href="https://docs.tokenbound.org/guides/deploy-registry">here</a>
 
