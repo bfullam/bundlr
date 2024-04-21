@@ -4,7 +4,7 @@
 import React, { ChangeEvent, useEffect, useState } from "react";
 import Image from "next/image";
 import Jazzicon, { jsNumberForAddress } from "react-jazzicon";
-import { parseEther } from "viem";
+import { formatGwei, parseEther } from "viem";
 import { useScaffoldContractWrite } from "~~/hooks/scaffold-eth";
 import { useScaffoldContractRead } from "~~/hooks/scaffold-eth";
 
@@ -35,9 +35,9 @@ export const BundlCard = ({ tokenId }: BundlCardProps) => {
   }; */
 
   // @ts-ignore
-  /*  const balanceInDecimals = (balance: bigint) => {
-    return formatGwei(balance);
-  }; */
+  const balanceInDecimals = (balance: bigint) => {
+    return Number(formatGwei(balance));
+  };
 
   // Function to generate a random Ethereum address
   const generateRandomAddress = () => {
@@ -94,11 +94,11 @@ export const BundlCard = ({ tokenId }: BundlCardProps) => {
   });
 
   // @ts-ignore
-  /* const { data: getAllocationBalances } = useScaffoldContractRead({
+  const { data: getAllocationBalances } = useScaffoldContractRead({
     contractName: "BundlrNft",
     functionName: "getAllocationBalances",
     args: [BigInt(tokenId)],
-  }); */
+  });
 
   // WRITE CONTRACT
 
@@ -149,6 +149,11 @@ export const BundlCard = ({ tokenId }: BundlCardProps) => {
                     <div className="flex flex-row space-x-2">
                       {renderTokenImage(allocation)}
                       <div className="font-medium">{allocation?.symbol}</div>
+                      <div>
+                        {getAllocationBalances?.[index]?.balance
+                          ? balanceInDecimals(getAllocationBalances[index].balance)
+                          : "No balance available"}
+                      </div>
                     </div>
                     <div className="font-medium">{allocation?.percentage}%</div>
                   </div>
