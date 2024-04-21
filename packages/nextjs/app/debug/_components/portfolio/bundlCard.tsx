@@ -35,7 +35,7 @@ export const BundlCard = ({ tokenId }: BundlCardProps) => {
 
   // This function fetches token prices from the API, ID is the token ID
 
-  const getPrices = async (id: string): Promise<any | null> => {
+  /* const getPrices = async (id: string): Promise<any | null> => {
     try {
       const res = await fetch(`/api/tokenPrices?id=${id}`);
       if (!res.ok) {
@@ -48,7 +48,7 @@ export const BundlCard = ({ tokenId }: BundlCardProps) => {
       console.error("Failed to fetch token prices:", error);
       return null;
     }
-  };
+  }; */
 
   // READ CONTRACT
 
@@ -95,7 +95,7 @@ export const BundlCard = ({ tokenId }: BundlCardProps) => {
 
   // EFFECTS
   useEffect(() => {
-    getPrices("1"); // Call the function on component mount or when tokenId changes
+    /* getPrices("1"); // Call the function on component mount or when tokenId changes */
   }, [tokenId]); // Consider adding dependencies if needed
 
   return (
