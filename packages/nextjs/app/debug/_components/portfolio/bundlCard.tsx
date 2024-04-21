@@ -1,12 +1,17 @@
 "use client";
 
 import React, { ChangeEvent, useEffect, useState } from "react";
-import { formatGwei, parseEther } from "viem";
+import { formatEther, parseEther } from "viem";
 import { useScaffoldContractWrite } from "~~/hooks/scaffold-eth";
 import { useScaffoldContractRead } from "~~/hooks/scaffold-eth";
 
 type BundlCardProps = {
   tokenId: string;
+};
+
+type TokenBalance = {
+  symbol: string;
+  balance: bigint;
 };
 
 export const BundlCard = ({ tokenId }: BundlCardProps) => {
@@ -30,25 +35,31 @@ export const BundlCard = ({ tokenId }: BundlCardProps) => {
   };
 
   const balanceInDecimals = (balance: bigint) => {
-    return formatGwei(balance);
+    return formatEther(balance);
   };
 
   // This function fetches token prices from the API, ID is the token ID
-
-  /* const getPrices = async (id: string): Promise<any | null> => {
+  const getPrices = async (tokenBalances: TokenBalance[]): Promise<any | null> => {
     try {
-      const res = await fetch(`/api/tokenPrices?id=${id}`);
+      const res = await fetch(`/api/tokenPrices?tokenSymbols=${tokenBalances.map(token => token.symbol).join(",")}`);
       if (!res.ok) {
         throw new Error(`HTTP error! Status: ${res.status}`);
       }
       const data = await res.json();
-      console.log("API Response:", data);
-      return data;
+      // console.log("API Response:", data);
+      let totalUSDValue = 0;
+      for (const key in data.data) {
+        const tokenBalance = tokenBalances.find(token => token.symbol === key);
+        if (!tokenBalance) continue;
+        totalUSDValue +=
+          (data.data[key].quote.USD.price || 0) * Number(balanceInDecimals(tokenBalance.balance) || 0) * 100;
+      }
+      return totalUSDValue;
     } catch (error) {
       console.error("Failed to fetch token prices:", error);
       return null;
     }
-  }; */
+  };
 
   // READ CONTRACT
 
@@ -95,8 +106,9 @@ export const BundlCard = ({ tokenId }: BundlCardProps) => {
 
   // EFFECTS
   useEffect(() => {
-    /* getPrices("1"); // Call the function on component mount or when tokenId changes */
-  }, [tokenId]); // Consider adding dependencies if needed
+    if (!getAllocationBalances) return;
+    getPrices(getAllocationBalances?.map(({ symbol, balance }) => ({ symbol, balance }))); // Call the function on component mount or when tokenId changes
+  });
 
   return (
     <>
@@ -106,6 +118,7 @@ export const BundlCard = ({ tokenId }: BundlCardProps) => {
         <div className="pt-5">
           {getAllocations?.map((allocation, index) => (
             <div className="pb-2" key={index}>
+              <div>Symbol: {allocation.symbol}</div>
               <div>Address: {formatAddress(allocation.token)}</div>
               <div>Weight: {allocation?.percentage}</div>
               <div>

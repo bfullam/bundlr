@@ -11,14 +11,13 @@ type ApiResponse = {
 };
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<ApiResponse | ApiError>) {
-  const { id } = req.query; // Get the id from query parameters
-
-  if (!id) {
-    res.status(400).json({ message: "No ID provided" });
+  const { tokenSymbols } = req.query; // Get the id from query parameters
+  if (!tokenSymbols || tokenSymbols.length === 0) {
+    res.status(400).json({ message: "No token symbols provided" });
     return;
   }
 
-  const url = `https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest?id=${id}`;
+  const url = `https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest?symbol=${tokenSymbols}`;
   const apiKey = process.env.NEXT_PUBLIC_CMC_API_KEY || ""; // Default to an empty string if undefined
 
   // Check if apiKey is present
