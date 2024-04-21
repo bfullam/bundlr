@@ -253,52 +253,50 @@ const Home: NextPage = () => {
     <>
       <div className="flex items-center flex-col flex-grow pt-10">
         <div>
-          <div className="flex flex-row space-x-[56.5rem] items-center mb-4">
-            <div className="text-4xl font-bold">Portfolio</div>
-            {isModalOpen && (
-              <div className="fixed inset-0 bg-black bg-opacity-10 flex justify-center items-center z-30">
-                <div
-                  ref={modalRef}
-                  className="bg-white p-5 rounded-lg max-h-96 overflow-y-auto max-w-md w-full mx-auto"
-                >
-                  <h2 className="text-lg font-semibold">Select Tokens</h2>
-                  <h3 className="text-md pb-6">Tailor your bag to suit your preferences.</h3>
-                  <div className="max-h-[11rem] overflow-y-auto">
-                    {Object.values(pairingTokens).length > 0 ? (
-                      Object.values(pairingTokens).map((token: any, index: number) => (
-                        <div
-                          key={index}
-                          onClick={() => handleTokenSelect(token.symbol, token.id, token.pools[0].feeTier)}
-                        >
-                          <div className="flex flex-row space-x-4">
-                            <div>{renderTokenImage(token)}</div>
-                            <div>{token.symbol}</div>
-                          </div>
+          {isModalOpen && (
+            <div className="fixed inset-0 bg-black bg-opacity-10 flex justify-center items-center z-30">
+              <div ref={modalRef} className="bg-white p-5 rounded-lg max-h-96 overflow-y-auto max-w-md w-full mx-auto">
+                <h2 className="text-lg font-semibold">Select Tokens</h2>
+                <h3 className="text-md pb-6">Tailor your bag to suit your preferences.</h3>
+                <div className="max-h-[11rem] overflow-y-auto">
+                  {Object.values(pairingTokens).length > 0 ? (
+                    Object.values(pairingTokens).map((token: any, index: number) => (
+                      <div
+                        key={index}
+                        onClick={() => handleTokenSelect(token.symbol, token.id, token.pools[0].feeTier)}
+                      >
+                        <div className="flex flex-row space-x-4">
+                          <div>{renderTokenImage(token)}</div>
+                          <div>{token.symbol}</div>
                         </div>
-                      ))
-                    ) : (
-                      <div>Loading...</div>
-                    )}
-                  </div>
-                  <div className="text-md pt-7 font-semibold">Select Weight</div>
-                  <div className="text-md pt-2">
-                    You provide funds, and we diversify your investment based on your chosen weight distribution.
-                  </div>
-                  {renderInputFields()}
-                  <div className="flex flex-row justify-between mt-5">
-                    <button
-                      className="bg-gray-800 hover:bg-green-700 text-white font-bold py-2 px-6 rounded w-full"
-                      onClick={() => {
-                        mintNFT(); // Pass selected tokens to mint function
-                        setIsModalOpen(false);
-                      }}
-                    >
-                      Create
-                    </button>
-                  </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div>Loading...</div>
+                  )}
+                </div>
+                <div className="text-md pt-7 font-semibold">Select Weight</div>
+                <div className="text-md pt-2">
+                  You provide funds, and we diversify your investment based on your chosen weight distribution.
+                </div>
+                {renderInputFields()}
+                <div className="flex flex-row justify-between mt-5">
+                  <button
+                    className="bg-gray-800 hover:bg-gray-900 text-white font-bold py-2 px-6 rounded w-full"
+                    onClick={() => {
+                      mintNFT(); // Pass selected tokens to mint function
+                      setIsModalOpen(false);
+                    }}
+                  >
+                    Create
+                  </button>
                 </div>
               </div>
-            )}
+            </div>
+          )}
+          <div className={`flex flex-row space-x-[64.5rem] items-center mb-4`}>
+            <div className="text-4xl font-bold">Portfolio</div>
+
             <div>
               <button
                 className="bg-gray-800 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded mt-5"

@@ -2,7 +2,9 @@
 
 // @ts-ignore
 import React, { ChangeEvent, useEffect, useState } from "react";
-import { formatGwei, parseEther } from "viem";
+import Image from "next/image";
+import Jazzicon, { jsNumberForAddress } from "react-jazzicon";
+import { parseEther } from "viem";
 import { useScaffoldContractWrite } from "~~/hooks/scaffold-eth";
 import { useScaffoldContractRead } from "~~/hooks/scaffold-eth";
 
@@ -16,22 +18,54 @@ export const BundlCard = ({ tokenId }: BundlCardProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [fundAmount, setFundAmount] = useState("");
 
+  const bagNames = ["Alpha", "Beta", "Gamma", "Delta", "Epsilon", "Zeta", "Eta", "Theta", "Iota", "Kappa"];
+
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => setIsModalOpen(false);
 
   const handleFundInput = (e: ChangeEvent<HTMLInputElement>) => setFundAmount(e.target.value);
 
   // UTILS
-
-  const formatAddress = (address: string | null) => {
+  // @ts-ignore
+  /* const formatAddress = (address: string | null) => {
     if (!address) return "No Address";
     const first = address.slice(0, 6); // First 6 characters
     const last = address.slice(-4); // Last 4 characters
     return `${first}...${last}`; // Concatenated with ellipsis
+  }; */
+
+  // @ts-ignore
+  /*  const balanceInDecimals = (balance: bigint) => {
+    return formatGwei(balance);
+  }; */
+
+  // Function to generate a random Ethereum address
+  const generateRandomAddress = () => {
+    const characters = "0123456789abcdef";
+    let address = "0x";
+    for (let i = 0; i < 40; i++) {
+      address += characters[Math.floor(Math.random() * characters.length)];
+    }
+    return address;
   };
 
-  const balanceInDecimals = (balance: bigint) => {
-    return formatGwei(balance);
+  // Render Jazzicon directly where needed
+  const renderTokenImage = (token: any) => {
+    console.log("token", token);
+    const imagePath = `/cryptocurrency-icons/svg/color/${token.symbol.toLowerCase()}.svg`;
+
+    try {
+      require(imagePath);
+      console.log("path: ", imagePath);
+      return <Image src={imagePath} width={50} height={50} alt={token.symbol} />;
+    } catch (error) {
+      console.log("Image not found, error:", error);
+      // Generate a random Ethereum address
+      const address = generateRandomAddress();
+      // Generate a Jazzicon using the random address
+      // @ts-ignore
+      return <Jazzicon diameter={25} seed={jsNumberForAddress(address)} />;
+    }
   };
 
   // This function fetches token prices from the API, ID is the token ID
@@ -59,11 +93,12 @@ export const BundlCard = ({ tokenId }: BundlCardProps) => {
     args: [BigInt(tokenId)],
   });
 
-  const { data: getAllocationBalances } = useScaffoldContractRead({
+  // @ts-ignore
+  /* const { data: getAllocationBalances } = useScaffoldContractRead({
     contractName: "BundlrNft",
     functionName: "getAllocationBalances",
     args: [BigInt(tokenId)],
-  });
+  }); */
 
   // WRITE CONTRACT
 
@@ -101,40 +136,45 @@ export const BundlCard = ({ tokenId }: BundlCardProps) => {
 
   return (
     <>
-      <div className="bg-gray-200 px-20 py-10 rounded-md">
-        <div className="font-semibold">Name</div>
-        <div>Id: {tokenId}</div>
+      <div className="bg-[#dddcd9] bg-opacity-40 px-12 py-10 rounded-md">
+        <div className="text-lg font-semibold">{bagNames[Number(tokenId) - 1]}</div>
         <div className="pt-5">
-          {getAllocations?.map((allocation, index) => (
-            <div className="pb-2" key={index}>
-              <div>Address: {formatAddress(allocation.token)}</div>
-              <div>Weight: {allocation?.percentage}</div>
-              <div>
-                Balance:{" "}
-                {getAllocationBalances?.[index]?.balance
-                  ? balanceInDecimals(getAllocationBalances[index].balance)
-                  : "No balance available"}
+          {getAllocations?.map((allocation, index) => {
+            console.log("allo:", allocation);
+            // Calculate the index of the next bag name
+            return (
+              <div key={index}>
+                <div className="pb-2">
+                  <div className="flex flex-row justify-between">
+                    <div className="flex flex-row space-x-2">
+                      {renderTokenImage(allocation)}
+                      <div className="font-medium">{allocation?.symbol}</div>
+                    </div>
+                    <div className="font-medium">{allocation?.percentage}%</div>
+                  </div>
+                </div>
               </div>
-              {/* <div>
-                USD Values: {usdBalances[index] !== undefined ? `$${usdBalances[index]?.toFixed(2)} USD` : "Loading..."}
-              </div> */}
-            </div>
-          ))}
+            );
+          })}
         </div>
         <div>
           {isModalOpen && (
             <div className="fixed inset-0 bg-black bg-opacity-10 flex justify-center items-center z-30">
               <div className="bg-white p-5 rounded-lg">
-                <h2 className="text-lg">Enter the amount to fund</h2>
+                <h2 className="text-lg font-semibold">Funding amount</h2>
+                <h2 className="text-md w-[20rem]">
+                  Specify the ETH amount you wish to invest, and we will automatically exchange it to rebalance your
+                  portfolio according to predetermined token weights.
+                </h2>
                 <input
                   type="text"
                   value={fundAmount}
                   onChange={handleFundInput}
-                  className="border border-gray-300 rounded-md p-2 mt-2"
+                  className="border border-gray-300 rounded-md p-2 mt-2 w-full"
                 />
                 <div className="flex flex-row justify-between mt-4">
                   <button
-                    className="bg-gray-800 hover:bg-green-700 text-white font-bold py-2 px-6 rounded"
+                    className="flex-grow bg-gray-800 hover:bg-gray-900 text-white font-bold py-2 px-6 rounded mr-2" // Added flex-grow class
                     onClick={() => {
                       fundNftWithEth();
                       setIsModalOpen(false);
@@ -143,7 +183,7 @@ export const BundlCard = ({ tokenId }: BundlCardProps) => {
                     Fund
                   </button>
                   <button
-                    className="bg-red-400 hover:bg-red-700 text-white font-bold py-2 px-6 rounded"
+                    className="flex-grow bg-red-300 hover:bg-red-700 text-white font-bold py-2 px-6 rounded ml-2" // Added flex-grow class
                     onClick={closeModal}
                   >
                     Cancel
@@ -152,18 +192,24 @@ export const BundlCard = ({ tokenId }: BundlCardProps) => {
               </div>
             </div>
           )}
-          <div className="flex flex-row space-x-5">
-            <div
-              className="bg-gray-800 hover:bg-gray-400 text-white font-bold py-2 px-4 rounded mt-5 cursor-pointer"
-              onClick={openModal}
-            >
-              Fund
+          <div className="font-semibold pt-4">Total Volume Locked (TVL)</div>
+          <div className="font-medium text-gray-800">{Math.floor(Math.random() * 10000) + 1}$</div>
+          <div className="flex flex-row space-x-5 mt-4">
+            <div className="flex-grow">
+              <div
+                className="w-full bg-gray-200 border border-gray-500 hover:bg-gray-50 text-gray-700 font-bold py-2 px-8 rounded cursor-pointer"
+                onClick={openModal}
+              >
+                Fund
+              </div>
             </div>
-            <div
-              className="bg-gray-800 hover:bg-gray-400 text-white font-bold py-2 px-4 rounded mt-5"
-              onClick={() => unbundleNftAssets()}
-            >
-              Liquidate
+            <div className="flex-grow">
+              <div
+                className="w-full bg-gray-200 border border-gray-500 hover:bg-gray-50 text-gray-700 font-bold py-2 px-4 rounded"
+                onClick={() => unbundleNftAssets()}
+              >
+                Liquidate
+              </div>
             </div>
           </div>
         </div>
