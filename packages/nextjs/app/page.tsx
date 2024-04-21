@@ -89,7 +89,7 @@ const Home: NextPage = () => {
     .then(data => {
       const tokensThatPairWithEth = data.data.pools.reduce((acc: any, pool: any) => {
         // Check if the pool is an ETH pool and has liquidity
-        const isEthPool = pool.token0.symbol === "WETH" || pool.token1 === "WETH";
+        const isEthPool = pool.token0.symbol === "WETH" || pool.token1.symbol === "WETH";
         const hasLiquidity = pool.liquidity > 0;
         if (!isEthPool || !hasLiquidity) {
           return acc;
@@ -110,7 +110,7 @@ const Home: NextPage = () => {
           ...acc,
           [nonEthToken.id]: { ...nonEthToken, pools: [{ feeTier: pool.feeTier, liquidity: pool.liquidity }] },
         };
-      }, []);
+      }, {});
 
       // If the pairingTokens array is empty or the chainId has changed, update the state
       if (pairingTokens.length === 0 || pairingTokensChainId !== chainId) {
@@ -207,14 +207,16 @@ const Home: NextPage = () => {
                   <h2 className="text-lg font-semibold">Select Tokens</h2>
                   <div className="max-h-[11rem] overflow-y-auto">
                     {Object.values(pairingTokens).length > 0 ? (
-                      Object.values(pairingTokens).map((token: any, index: number) => (
-                        <div
-                          key={index}
-                          onClick={() => handleTokenSelect(token.symbol, token.id, token.pools[0].feeTier)}
-                        >
-                          <label>{token.symbol}</label>
-                        </div>
-                      ))
+                      Object.values(pairingTokens)
+                        .sort((a: any, b: any) => a.symbol.localeCompare(b.symbol))
+                        .map((token: any, index: number) => (
+                          <div
+                            key={index}
+                            onClick={() => handleTokenSelect(token.symbol, token.id, token.pools[0].feeTier)}
+                          >
+                            <label>{token.symbol}</label>
+                          </div>
+                        ))
                     ) : (
                       <div>Loading...</div>
                     )}
