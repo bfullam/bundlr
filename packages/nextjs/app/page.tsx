@@ -89,14 +89,15 @@ const Home: NextPage = () => {
     .then(data => {
       const tokensThatPairWithEth = data.data.pools.reduce((acc: any, pool: any) => {
         // Check if the pool is an ETH pool and has liquidity
-        const isEthPool = pool.token0.symbol === "WETH" || pool.token1.symbol === "WETH";
+        const currentChainEth = chainId === 100 ? "XDAI" : "WETH"; // Gnosis uses XDAI instead of ETH
+        const isEthPool = pool.token0.symbol === currentChainEth || pool.token1.symbol === currentChainEth;
         const hasLiquidity = pool.liquidity > 0;
         if (!isEthPool || !hasLiquidity) {
           return acc;
         }
 
         // Organize the data by token, so we can see all the pools for each token with their liquidity and feeTier
-        const nonEthToken = pool.token0.symbol === "WETH" ? pool.token1 : pool.token0;
+        const nonEthToken = pool.token0.symbol === currentChainEth ? pool.token1 : pool.token0;
         if (acc[nonEthToken.id]) {
           return {
             ...acc,
