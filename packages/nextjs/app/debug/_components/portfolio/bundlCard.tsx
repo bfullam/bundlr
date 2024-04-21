@@ -60,7 +60,6 @@ export const BundlCard = ({ tokenId }: BundlCardProps) => {
     const imagePath = `/cryptocurrency-icons/128/color/${token.symbol.toLowerCase()}.png`;
 
     try {
-      console.log("path: ", imagePath);
       return <Image src={imagePath} width={50} height={50} alt={token.symbol} />;
     } catch (error) {
       console.log("Image not found, error:", error);
@@ -151,7 +150,6 @@ export const BundlCard = ({ tokenId }: BundlCardProps) => {
         <div className="text-lg font-semibold">{bagNames[Number(tokenId) - 1]}</div>
         <div className="pt-5">
           {getAllocations?.map((allocation, index) => {
-            console.log("allo:", allocation);
             // Calculate the index of the next bag name
             return (
               <div key={index}>

@@ -35,7 +35,6 @@ const Home: NextPage = () => {
   const closeModal = () => {
     setIsModalOpen(false);
     setSelectedTokens([]); // Reset selected tokens array
-
     setPercentageInputs([]); // Reset percentage inputs
   };
 
@@ -222,9 +221,7 @@ const Home: NextPage = () => {
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      console.log("modalRef", modalRef.current);
       if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
-        console.log("detected");
         closeModal(); // Close the modal if clicked outside
       }
     };
@@ -234,7 +231,7 @@ const Home: NextPage = () => {
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [modalRef, closeModal]);
+  }, [modalRef]);
 
   // WRITE FUNCTIONS
   const {
@@ -261,17 +258,20 @@ const Home: NextPage = () => {
                 <h3 className="text-md pb-6">Tailor your bag to suit your preferences.</h3>
                 <div className="max-h-[11rem] overflow-y-auto">
                   {Object.values(pairingTokens).length > 0 ? (
-                    Object.values(pairingTokens).map((token: any, index: number) => (
-                      <div
-                        key={index}
-                        onClick={() => handleTokenSelect(token.symbol, token.id, token.pools[0].feeTier)}
-                      >
-                        <div className="flex flex-row space-x-4">
-                          <div>{renderTokenImage(token)}</div>
-                          <div>{token.symbol}</div>
+                    Object.values(pairingTokens)
+                      .filter((token: any) => token.symbol) // Filter out ETH
+                      .sort((a, b) => a.symbol.localeCompare(b.symbol))
+                      .map((token: any, index: number) => (
+                        <div
+                          key={index}
+                          onClick={() => handleTokenSelect(token.symbol, token.id, token.pools[0].feeTier)}
+                        >
+                          <div className="flex flex-row space-x-4">
+                            <div>{renderTokenImage(token)}</div>
+                            <div>{token.symbol}</div>
+                          </div>
                         </div>
-                      </div>
-                    ))
+                      ))
                   ) : (
                     <div>Loading...</div>
                   )}
