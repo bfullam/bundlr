@@ -1,5 +1,6 @@
 "use client";
 
+// @ts-ignore
 import React, { ChangeEvent, useEffect, useState } from "react";
 import { formatGwei, parseEther } from "viem";
 import { useScaffoldContractWrite } from "~~/hooks/scaffold-eth";

@@ -1,14 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import { BundlCard } from "./debug/_components/portfolio/bundlCard";
 import { ApolloClient, InMemoryCache, gql } from "@apollo/client";
 import type { NextPage } from "next";
+import Jazzicon, { jsNumberForAddress } from "react-jazzicon";
 import { useAccount, useChainId } from "wagmi";
 import { useScaffoldContractRead, useScaffoldContractWrite } from "~~/hooks/scaffold-eth";
 
 const Home: NextPage = () => {
   const { address: connectedAddress } = useAccount();
+  const modalRef = useRef<HTMLDivElement>(null);
 
   // READ FUNCTIONS
   const { data: tokenlist } = useScaffoldContractRead({
@@ -152,17 +155,49 @@ const Home: NextPage = () => {
       const symbol = tokenObject ? tokenObject.symbol : "";
 
       return (
-        <div key={index} className="mt-4">
-          <label className="mr-2">{symbol} Percentage:</label>
+        <div key={index} className="mt-4 flex items-center">
+          <label className="mr-2 text-md font-semibold flex-shrink-0" style={{ width: "100px" }}>
+            {symbol}
+          </label>
           <input
             type="number"
             value={input.percentage || ""}
             onChange={e => handlePercentageChange(e, index)}
-            className="border px-2 py-1 rounded"
+            className="border px-2 py-1 rounded w-full"
+            style={{ maxWidth: "calc(100% - 100px)" }} // Adjust based on the width of the label
           />
         </div>
       );
     });
+  };
+
+  // Function to generate a random Ethereum address
+  const generateRandomAddress = () => {
+    const characters = "0123456789abcdef";
+    let address = "0x";
+    for (let i = 0; i < 40; i++) {
+      address += characters[Math.floor(Math.random() * characters.length)];
+    }
+    return address;
+  };
+
+  // Render Jazzicon directly where needed
+  const renderTokenImage = (token: any) => {
+    console.log("token", token);
+    const imagePath = `/cryptocurrency-icons/svg/color/${token.symbol.toLowerCase()}.svg`;
+
+    try {
+      require(imagePath);
+      console.log("path: ", imagePath);
+      return <Image src={imagePath} width={50} height={50} alt={token.symbol} />;
+    } catch (error) {
+      console.log("Image not found, error:", error);
+      // Generate a random Ethereum address
+      const address = generateRandomAddress();
+      // Generate a Jazzicon using the random address
+      // @ts-ignore
+      return <Jazzicon diameter={25} seed={jsNumberForAddress(address)} />;
+    }
   };
 
   const handlePercentageChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
@@ -181,6 +216,25 @@ const Home: NextPage = () => {
       }
     }
   };
+
+  // EFFECTS
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      console.log("modalRef", modalRef.current);
+      if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
+        console.log("detected");
+        closeModal(); // Close the modal if clicked outside
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [modalRef, closeModal]);
+
   // WRITE FUNCTIONS
   const {
     writeAsync: mintNFT,
@@ -199,12 +253,16 @@ const Home: NextPage = () => {
     <>
       <div className="flex items-center flex-col flex-grow pt-10">
         <div>
-          <div className="flex flex-row justify-between items-center">
+          <div className="flex flex-row space-x-[56.5rem] items-center mb-4">
             <div className="text-4xl font-bold">Portfolio</div>
             {isModalOpen && (
               <div className="fixed inset-0 bg-black bg-opacity-10 flex justify-center items-center z-30">
-                <div className="bg-white p-5 rounded-lg max-h-96 overflow-y-auto max-w-md w-full mx-auto">
+                <div
+                  ref={modalRef}
+                  className="bg-white p-5 rounded-lg max-h-96 overflow-y-auto max-w-md w-full mx-auto"
+                >
                   <h2 className="text-lg font-semibold">Select Tokens</h2>
+                  <h3 className="text-md pb-6">Tailor your bag to suit your preferences.</h3>
                   <div className="max-h-[11rem] overflow-y-auto">
                     {Object.values(pairingTokens).length > 0 ? (
                       Object.values(pairingTokens).map((token: any, index: number) => (
@@ -212,29 +270,30 @@ const Home: NextPage = () => {
                           key={index}
                           onClick={() => handleTokenSelect(token.symbol, token.id, token.pools[0].feeTier)}
                         >
-                          <label>{token.symbol}</label>
+                          <div className="flex flex-row space-x-4">
+                            <div>{renderTokenImage(token)}</div>
+                            <div>{token.symbol}</div>
+                          </div>
                         </div>
                       ))
                     ) : (
                       <div>Loading...</div>
                     )}
                   </div>
+                  <div className="text-md pt-7 font-semibold">Select Weight</div>
+                  <div className="text-md pt-2">
+                    You provide funds, and we diversify your investment based on your chosen weight distribution.
+                  </div>
                   {renderInputFields()}
-                  <div className="flex flex-row justify-between mt-4">
+                  <div className="flex flex-row justify-between mt-5">
                     <button
-                      className="bg-gray-800 hover:bg-green-700 text-white font-bold py-2 px-6 rounded"
+                      className="bg-gray-800 hover:bg-green-700 text-white font-bold py-2 px-6 rounded w-full"
                       onClick={() => {
                         mintNFT(); // Pass selected tokens to mint function
                         setIsModalOpen(false);
                       }}
                     >
                       Create
-                    </button>
-                    <button
-                      className="bg-red-400 hover:bg-red-700 text-white font-bold py-2 px-6 rounded"
-                      onClick={closeModal}
-                    >
-                      Cancel
                     </button>
                   </div>
                 </div>
