@@ -52,10 +52,9 @@ export const BundlCard = ({ tokenId }: BundlCardProps) => {
   // Render Jazzicon directly where needed
   const renderTokenImage = (token: any) => {
     if (!token || !token.symbol) return null;
-    const imagePath = `/cryptocurrency-icons/32/color/${token.symbol.toLowerCase()}.png`;
+    const imagePath = `/cryptocurrency-icons/128/color/${token.symbol.toLowerCase()}.png`;
 
     try {
-      require(imagePath);
       console.log("path: ", imagePath);
       return <Image src={imagePath} width={50} height={50} alt={token.symbol} />;
     } catch (error) {
