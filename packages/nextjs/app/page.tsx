@@ -1,10 +1,26 @@
 "use client";
 
+import { BundlCard } from "./debug/_components/portfolio/bundlCard";
 import type { NextPage } from "next";
-import { parseEther } from "viem";
+import { useAccount } from "wagmi";
 import { useScaffoldContractWrite } from "~~/hooks/scaffold-eth";
+import { useScaffoldContractRead } from "~~/hooks/scaffold-eth";
 
 const Home: NextPage = () => {
+  const { address: connectedAddress } = useAccount();
+
+  // READ FUNCTIONS
+
+  const { data: tokenlist } = useScaffoldContractRead({
+    contractName: "BundlrNft",
+    functionName: "getAllTokens",
+    args: [connectedAddress],
+  });
+
+  // STATE FUNCTIONS
+
+  // WRITE FUNCTIONS
+
   const {
     writeAsync: mintNFT,
     // isLoading: mintNFTIsLoading,
@@ -23,44 +39,31 @@ const Home: NextPage = () => {
     },
   });
 
-  const {
-    writeAsync: fundNftWithEth,
-    // isLoading: fundNftWithEthIsLoading,
-    // isMining: fundNftWithEthIsMining,
-  } = useScaffoldContractWrite({
-    contractName: "BundlrNft",
-    functionName: "fundWithEth",
-    args: [BigInt(1)],
-    value: parseEther("1"),
-    onBlockConfirmation: txnReceipt => {
-      console.log("Fund transaction blockHash", txnReceipt.blockHash);
-    },
-  });
-
-  const {
-    writeAsync: unbundleNftAssets,
-    // isLoading: unbundleNftAssetsIsLoading,
-    // isMining: unbundleNftAssetsIsMining,
-  } = useScaffoldContractWrite({
-    contractName: "BundlrNft",
-    functionName: "unbundle",
-    args: [BigInt(1)],
-    onBlockConfirmation: txnReceipt => {
-      console.log("Unbundle transaction blockHash", txnReceipt.blockHash);
-    },
-  });
-
   return (
     <>
       <div className="flex items-center flex-col flex-grow pt-10">
-        <div className="px-5">
-          <h1 className="text-center">
-            <span className="block text-2xl mb-2">Welcome to</span>
-            <span className="block text-4xl font-bold">Scaffold-ETH 2</span>
-          </h1>
+        <div>
+          <div className="flex flex-row justify-between items-center">
+            <div className="text-4xl font-bold">Portfolio</div>
+            <div>
+              <button
+                className="bg-gray-800 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded mt-5"
+                onClick={() => mintNFT()}
+              >
+                Create
+              </button>
+            </div>
+          </div>
+          <div className="grid grid-cols-3 gap-4 pt-8">
+            {tokenlist?.map((token, index) => (
+              <div key={index}>
+                <BundlCard tokenId={token.toString()} />
+              </div>
+            ))}
+          </div>
         </div>
 
-        <button
+        {/* <button
           className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mt-5"
           onClick={() => mintNFT()}
         >
@@ -77,7 +80,7 @@ const Home: NextPage = () => {
           onClick={() => unbundleNftAssets()}
         >
           UNBUNDLE NFT ASSETS
-        </button>
+        </button> */}
       </div>
     </>
   );
