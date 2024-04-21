@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
+import {Base64} from "base64-sol/base64.sol";
 import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "erc6551/src/lib/ERC6551AccountLib.sol";
 import "erc6551/src/interfaces/IERC6551Registry.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 
 address constant SWAP_ROUTER = 0x2E6cd2d30aa43f40aa81619ff4b6E0a41479B13F;
 address constant WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
@@ -196,6 +198,91 @@ contract BundlrNft is ERC721 {
         IBundle6551Implementation(tokenBoundAccount).unbundle(
             addressesOfAllocatedTokens
         );
+    }
+
+    /**
+     * @dev See {IERC721Metadata-tokenURI}.
+     */
+    function tokenURI(
+        uint256 tokenId
+    ) public view virtual override returns (string memory) {
+        require(
+            tokenAllocations[tokenId].length > 0,
+            "No allocations set for this token"
+        );
+
+        string memory balances = "";
+        for (uint256 i = 0; i < tokenAllocations[tokenId].length; i++) {
+            // Font size that scales down with the number of allocations
+            uint256 fontSize = 130 - (tokenAllocations[tokenId].length * 9);
+
+            // Y position that scales down with the number of allocations
+            uint256 yPosition = (574 - tokenAllocations[tokenId].length * 7) +
+                i *
+                (150 - (tokenAllocations[tokenId].length * 11));
+
+            balances = string.concat(
+                balances,
+                '<text x="80" y="',
+                Strings.toString(yPosition),
+                '" fill="white" font-family="Helvetica" font-size="',
+                Strings.toString(fontSize),
+                '" font-weight="bold">',
+                Strings.toString(tokenAllocations[tokenId][i].percentage),
+                "% ",
+                tokenAllocations[tokenId][i].symbol,
+                "</text>"
+            );
+        }
+
+        uint256 totalAllocationBalances = 0;
+        for (uint256 i = 0; i < tokenAllocations[tokenId].length; i++) {
+            totalAllocationBalances += IERC20(
+                tokenAllocations[tokenId][i].token
+            ).balanceOf(getAccount(tokenId));
+        }
+
+        string[] memory uriParts = new string[](4);
+
+        uriParts[0] = string("data:application/json;base64,");
+        uriParts[1] = string(
+            abi.encodePacked(
+                '{"name":"Bundle #',
+                Strings.toString(tokenId),
+                '",',
+                '"description":"Bags are NFT owned accounts (6551) that accept ETH and swap into allocated tokens.",',
+                '"attributes":[{"trait_type":"Balance","value":"',
+                "skeet",
+                ' ETH"},{"trait_type":"Status","value":"Exists"}],',
+                '"image_data":"data:image/svg+xml;base64,'
+            )
+        );
+        uriParts[2] = Base64.encode(
+            abi.encodePacked(
+                '<svg width="1000" height="1000" viewBox="0 0 1000 1000" xmlns="http://www.w3.org/2000/svg">',
+                '<rect width="1000" height="1000" fill="hsl(',
+                Strings.toString(totalAllocationBalances % 360),
+                ', 78%, 56%)"/>',
+                '<text x="80" y="276" fill="white" font-family="Helvetica" font-size="130" font-weight="bold">',
+                "Bag #",
+                Strings.toString(tokenId),
+                "</text>",
+                '<text x="80" y="425" fill="white" font-family="Helvetica" font-size="130" font-weight="bold">',
+                " contains </text>",
+                balances,
+                "</svg>"
+            )
+        );
+        uriParts[3] = string('"}');
+
+        string memory uri = string.concat(
+            uriParts[0],
+            Base64.encode(
+                abi.encodePacked(uriParts[1], uriParts[2], uriParts[3])
+            )
+        );
+
+        return uri;
     }
 }
 
