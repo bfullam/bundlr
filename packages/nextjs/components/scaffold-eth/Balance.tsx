@@ -1,24 +1,17 @@
 "use client";
 
-import { useState } from "react";
 import { Address } from "viem";
 import { useBalance } from "wagmi";
-import { useTargetNetwork } from "~~/hooks/scaffold-eth/useTargetNetwork";
-import { useGlobalState } from "~~/services/store/store";
 
 type BalanceProps = {
   address?: Address;
   className?: string;
-  usdMode?: boolean;
 };
 
 /**
  * Display (ETH & USD) balance of an ETH address.
  */
-export const Balance = ({ address, className = "", usdMode }: BalanceProps) => {
-  const { targetNetwork } = useTargetNetwork();
-
-  const price = useGlobalState(state => state.nativeCurrencyPrice);
+export const Balance = ({ address, className = "" }: BalanceProps) => {
   const {
     data: balance,
     isError,
@@ -27,14 +20,6 @@ export const Balance = ({ address, className = "", usdMode }: BalanceProps) => {
     address,
     watch: true,
   });
-
-  const [displayUsdMode, setDisplayUsdMode] = useState(price > 0 ? Boolean(usdMode) : false);
-
-  const toggleBalanceMode = () => {
-    if (price > 0) {
-      setDisplayUsdMode(prevMode => !prevMode);
-    }
-  };
 
   if (!address || isLoading || balance === null) {
     return (
@@ -55,14 +40,9 @@ export const Balance = ({ address, className = "", usdMode }: BalanceProps) => {
     );
   }
 
-  const formattedBalance = balance ? Number(balance.formatted) : 0;
-
   return (
-    <button
-      className={`btn btn-sm btn-ghost flex flex-col font-normal items-center hover:bg-transparent ${className}`}
-      onClick={toggleBalanceMode}
-    >
-      <div className="w-full flex items-center justify-center">
+    <button className={`btn btn-sm btn-ghost flex flex-col font-normal items-center hover:bg-transparent ${className}`}>
+      {/* <div className="w-full flex items-center justify-center">
         {displayUsdMode ? (
           <>
             <span className="text-[0.8em] font-bold mr-1">$</span>
@@ -74,7 +54,7 @@ export const Balance = ({ address, className = "", usdMode }: BalanceProps) => {
             <span className="text-[0.8em] font-bold ml-1">{targetNetwork.nativeCurrency.symbol}</span>
           </>
         )}
-      </div>
+      </div> */}
     </button>
   );
 };
