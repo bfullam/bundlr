@@ -18,8 +18,29 @@ const Home: NextPage = () => {
   });
 
   // STATE FUNCTIONS
-  const [pairingTokens, setPairingTokens] = useState([]) as any[];
+  const [pairingTokens, setPairingTokens] = useState<
+    {
+      id: string;
+      symbol: string;
+    }[]
+  >([]);
   const [pairingTokensChainId, setPairingTokensChainId] = useState() as any;
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const openModal = () => setIsModalOpen(true);
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setSelectedTokens([]); // Reset selected tokens array
+
+    setPercentageInputs([]); // Reset percentage inputs
+  };
+
+  const [selectedTokens, setSelectedTokens] = useState<
+    { token: string; symbol: string; percentage: number; poolFee: number }[]
+  >([]);
+
+  const [percentageInputs, setPercentageInputs] = useState<{ token: string; percentage: number }[]>([]);
 
   // Get the current chainId from the wagmi hook
   const chainId = useChainId();
@@ -101,6 +122,59 @@ const Home: NextPage = () => {
       console.log("Error fetching data: ", err);
     });
 
+  // UTILS
+
+  const handleTokenSelect = (symbol: string, id: string, fee: string) => {
+    const tokenIndex = selectedTokens.findIndex(token => token.token === id);
+    if (tokenIndex !== -1) {
+      // Token is already selected, deselect it
+      const updatedTokens = [...selectedTokens];
+      updatedTokens.splice(tokenIndex, 1);
+      setSelectedTokens(updatedTokens);
+      // Remove the percentage for the deselected token
+      const updatedInputs = percentageInputs.filter(input => input.token !== id);
+      setPercentageInputs(updatedInputs);
+    } else {
+      // Token is not selected, add it to the list and initialize its percentage input
+      setSelectedTokens([...selectedTokens, { token: id, symbol, percentage: 50, poolFee: parseInt(fee) }]);
+      setPercentageInputs([...percentageInputs, { token: id, percentage: 50 }]); // Initialize the percentage input for the selected token
+    }
+    console.log("selectedtokens", selectedTokens);
+  };
+
+  const renderInputFields = () => {
+    // Convert pairingTokens object into an array of its values
+    const pairingTokensArray = Object.values(pairingTokens);
+
+    return percentageInputs.map((input, index) => {
+      // Find the token object with the matching address
+      const tokenObject = pairingTokensArray.find(token => token.id === input.token);
+      // Get the symbol from the token object
+      const symbol = tokenObject ? tokenObject.symbol : "";
+
+      return (
+        <div key={index} className="mt-4">
+          <label className="mr-2">{symbol} Percentage:</label>
+          <input
+            type="number"
+            value={input.percentage || ""}
+            onChange={e => handlePercentageChange(e, index)}
+            className="border px-2 py-1 rounded"
+          />
+        </div>
+      );
+    });
+  };
+
+  const handlePercentageChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
+    const newPercentage = parseInt(e.target.value);
+    if (!isNaN(newPercentage) || e.target.value === "") {
+      const updatedInputs = [...percentageInputs];
+      updatedInputs[index].percentage = e.target.value === "" ? 0 : newPercentage;
+      setPercentageInputs(updatedInputs); // Update the percentage for the selected token
+    }
+  };
+
   // WRITE FUNCTIONS
   const {
     writeAsync: mintNFT,
@@ -109,12 +183,7 @@ const Home: NextPage = () => {
   } = useScaffoldContractWrite({
     contractName: "BundlrNft",
     functionName: "mint",
-    args: [
-      [
-        { token: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", percentage: 50, poolFee: 3000 },
-        { token: "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599", percentage: 50, poolFee: 500 },
-      ],
-    ],
+    args: [selectedTokens],
     onBlockConfirmation: txnReceipt => {
       console.log("Mint transaction blockHash", txnReceipt.blockHash);
     },
@@ -126,10 +195,49 @@ const Home: NextPage = () => {
         <div>
           <div className="flex flex-row justify-between items-center">
             <div className="text-4xl font-bold">Portfolio</div>
+            {isModalOpen && (
+              <div className="fixed inset-0 bg-black bg-opacity-10 flex justify-center items-center z-30">
+                <div className="bg-white p-5 rounded-lg max-h-96 overflow-y-auto max-w-md w-full mx-auto">
+                  <h2 className="text-lg font-semibold">Select Tokens</h2>
+                  <div className="max-h-[11rem] overflow-y-auto">
+                    {Object.values(pairingTokens).length > 0 ? (
+                      Object.values(pairingTokens).map((token: any, index: number) => (
+                        <div
+                          key={index}
+                          onClick={() => handleTokenSelect(token.symbol, token.id, token.pools[0].feeTier)}
+                        >
+                          <label>{token.symbol}</label>
+                        </div>
+                      ))
+                    ) : (
+                      <div>Loading...</div>
+                    )}
+                  </div>
+                  {renderInputFields()}
+                  <div className="flex flex-row justify-between mt-4">
+                    <button
+                      className="bg-gray-800 hover:bg-green-700 text-white font-bold py-2 px-6 rounded"
+                      onClick={() => {
+                        mintNFT(); // Pass selected tokens to mint function
+                        setIsModalOpen(false);
+                      }}
+                    >
+                      Create
+                    </button>
+                    <button
+                      className="bg-red-400 hover:bg-red-700 text-white font-bold py-2 px-6 rounded"
+                      onClick={closeModal}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
             <div>
               <button
                 className="bg-gray-800 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded mt-5"
-                onClick={() => mintNFT()}
+                onClick={openModal}
               >
                 Create
               </button>
@@ -143,46 +251,6 @@ const Home: NextPage = () => {
             ))}
           </div>
         </div>
-
-        {/*<div className="px-5">
-          <h2 className="text-center text-xl">Available Tokens with their pools</h2>
-          <ul className="text-center">
-            {Object.values(pairingTokens).map((pool: any, index: number) => (
-              <>
-                <li key={index}>
-                  <span>{pool.symbol}</span>
-                  <ul>
-                    {pool.pools.map((pool: any, index: number) => (
-                      <li key={index}>
-                        <span>Fee Tier: {pool.feeTier}</span>, <span>Liquidity: {pool.liquidity}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </li>
-                <br />
-              </>
-            ))}
-          </ul>
-        </div>
-
-        <button
-          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mt-5"
-          onClick={() => mintNFT()}
-        >
-          MINT NFT
-        </button>
-        <button
-          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mt-5"
-          onClick={() => fundNftWithEth()}
-        >
-          FUND NFT ACCOUNT WITH 1 ETH
-        </button>
-        <button
-          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mt-5"
-          onClick={() => unbundleNftAssets()}
-        >
-          UNBUNDLE NFT ASSETS
-        </button> */}
       </div>
     </>
   );
