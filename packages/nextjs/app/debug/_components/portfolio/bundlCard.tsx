@@ -1,10 +1,10 @@
 "use client";
 
 // @ts-ignore
-import React, { ChangeEvent, useEffect, useState } from "react";
+import React, { ChangeEvent, memo, useState } from "react";
 import Image from "next/image";
 import Jazzicon, { jsNumberForAddress } from "react-jazzicon";
-import { formatEther, parseEther } from "viem";
+import { formatUnits, parseEther } from "viem";
 import { useScaffoldContractWrite } from "~~/hooks/scaffold-eth";
 import { useScaffoldContractRead } from "~~/hooks/scaffold-eth";
 
@@ -15,13 +15,14 @@ type BundlCardProps = {
 type TokenBalance = {
   symbol: string;
   balance: bigint;
+  decimalPlaces: number;
 };
 
-export const BundlCard = ({ tokenId }: BundlCardProps) => {
+export const BundlCard = memo(function BundlCard({ tokenId }: BundlCardProps) {
   // STATES
-
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [fundAmount, setFundAmount] = useState("");
+  const [totalUSDValue, setTotalUSDValue] = useState() as any;
 
   const bagNames = ["Alpha", "Beta", "Gamma", "Delta", "Epsilon", "Zeta", "Eta", "Theta", "Iota", "Kappa"];
 
@@ -29,20 +30,6 @@ export const BundlCard = ({ tokenId }: BundlCardProps) => {
   const closeModal = () => setIsModalOpen(false);
 
   const handleFundInput = (e: ChangeEvent<HTMLInputElement>) => setFundAmount(e.target.value);
-
-  // UTILS
-  // @ts-ignore
-  /* const formatAddress = (address: string | null) => {
-    if (!address) return "No Address";
-    const first = address.slice(0, 6); // First 6 characters
-    const last = address.slice(-4); // Last 4 characters
-    return `${first}...${last}`; // Concatenated with ellipsis
-  }; */
-
-  // @ts-ignore
-  const balanceInDecimals = (balance: bigint) => {
-    return Number(formatEther(balance));
-  };
 
   // Function to generate a random Ethereum address
   const generateRandomAddress = () => {
@@ -79,15 +66,18 @@ export const BundlCard = ({ tokenId }: BundlCardProps) => {
         throw new Error(`HTTP error! Status: ${res.status}`);
       }
       const data = await res.json();
-      // console.log("API Response:", data);
-      let totalUSDValue = 0;
+      let totalValue = 0;
       for (const key in data.data) {
         const tokenBalance = tokenBalances.find(token => token.symbol === key);
         if (!tokenBalance) continue;
-        totalUSDValue +=
-          (data.data[key].quote.USD.price || 0) * Number(balanceInDecimals(tokenBalance.balance) || 0) * 100;
+        totalValue +=
+          Number(data.data[key].quote.USD.price) *
+          Number(formatUnits(tokenBalance.balance, tokenBalance.decimalPlaces));
       }
-      return totalUSDValue;
+
+      if (totalUSDValue === undefined) {
+        setTotalUSDValue(totalValue);
+      }
     } catch (error) {
       console.error("Failed to fetch token prices:", error);
       return null;
@@ -118,7 +108,7 @@ export const BundlCard = ({ tokenId }: BundlCardProps) => {
   } = useScaffoldContractWrite({
     contractName: "BundlrNft",
     functionName: "fundWithEth",
-    args: [BigInt(1)],
+    args: [BigInt(tokenId)],
     value: parseEther(fundAmount),
     onBlockConfirmation: txnReceipt => {
       console.log("Fund transaction blockHash", txnReceipt.blockHash);
@@ -132,17 +122,15 @@ export const BundlCard = ({ tokenId }: BundlCardProps) => {
   } = useScaffoldContractWrite({
     contractName: "BundlrNft",
     functionName: "unbundle",
-    args: [BigInt(1)],
+    args: [BigInt(tokenId)],
     onBlockConfirmation: txnReceipt => {
       console.log("Unbundle transaction blockHash", txnReceipt.blockHash);
     },
   });
 
-  // EFFECTS
-  useEffect(() => {
-    if (!getAllocationBalances) return;
-    getPrices(getAllocationBalances?.map(({ symbol, balance }) => ({ symbol, balance }))); // Call the function on component mount or when tokenId changes
-  });
+  if (getAllocationBalances && totalUSDValue === undefined) {
+    getPrices(getAllocationBalances?.map(({ symbol, balance, decimalPlaces }) => ({ symbol, balance, decimalPlaces }))); // Call the function on component mount or when tokenId changes
+  }
 
   return (
     <>
@@ -160,7 +148,12 @@ export const BundlCard = ({ tokenId }: BundlCardProps) => {
                       <div className="font-medium">{allocation?.symbol}</div>
                       <div>
                         {getAllocationBalances?.[index]?.balance
-                          ? balanceInDecimals(getAllocationBalances[index].balance)
+                          ? `${Number(
+                              formatUnits(
+                                getAllocationBalances[index].balance,
+                                getAllocationBalances[index].decimalPlaces,
+                              ),
+                            ).toFixed(5)}...`
                           : "No balance available"}
                       </div>
                     </div>
@@ -206,8 +199,8 @@ export const BundlCard = ({ tokenId }: BundlCardProps) => {
               </div>
             </div>
           )}
-          <div className="font-semibold pt-4">Total Volume Locked (TVL)</div>
-          <div className="font-medium text-gray-800">{Math.floor(Math.random() * 10000) + 1}$</div>
+          <div className="font-semibold pt-4">Total Value Locked (TVL)</div>
+          <div className="font-medium text-gray-800">${totalUSDValue.toFixed(2)}</div>
           <div className="flex flex-row space-x-5 mt-4">
             <div className="flex-grow">
               <div
@@ -230,4 +223,4 @@ export const BundlCard = ({ tokenId }: BundlCardProps) => {
       </div>
     </>
   );
-};
+});
