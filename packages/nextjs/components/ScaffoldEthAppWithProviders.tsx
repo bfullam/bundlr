@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { RainbowKitProvider, lightTheme } from "@rainbow-me/rainbowkit";
+import { useTheme } from "next-themes";
 import { Toaster } from "react-hot-toast";
 import { WagmiConfig } from "wagmi";
 import { Header } from "~~/components/Header";
@@ -34,6 +35,8 @@ const ScaffoldEthApp = ({ children }: { children: React.ReactNode }) => {
 };
 
 export const ScaffoldEthAppWithProviders = ({ children }: { children: React.ReactNode }) => {
+  const { setTheme } = useTheme();
+  setTheme("light");
   return (
     <WagmiConfig config={wagmiConfig}>
       <ProgressBar />
