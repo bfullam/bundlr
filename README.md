@@ -27,10 +27,19 @@ To test ERC-6551 implementation:
 Home page:
 1. Mint NFT
   - Calls mint() on the NFT contract using the default Anvil account
-2. Fund with 1 ETH
-  - Calls fundWithEth() on the NFT contract, sending 1 ETH from default Anvil account and setting allocations of 50% USDC / 50% WBTC
-3. Unbundle
+2. Fund
+  - Calls fundWithEth() on the NFT contract, sending the ETH set in the input
+3. Liquidate
   - Calls unbundle() on the NFT contract, returning all held assets to the NFT owner
+
+Current Deployments:
+Arbitrum
+  Bundle6551Implementation: 0x3faD711398399abc798356AAB015789A11E530A9
+  BundlrNft: 0x54e0141FEA3feC1b6f7dd31cf2046B1B67AE562e
+
+Gnosis
+  Bundle6551Implementation: 0xA74dB94F04DBcb807650c6eEf9f3AE235F0795d9
+  BundlrNft: 0xA156ff8a642AB3Aa2635Ba40c5c96570607E54Ec
 
 # 🏗 Scaffold-ETH 2
 
