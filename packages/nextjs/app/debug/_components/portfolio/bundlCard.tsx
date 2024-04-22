@@ -200,7 +200,9 @@ export const BundlCard = memo(function BundlCard({ tokenId }: BundlCardProps) {
             </div>
           )}
           <div className="font-semibold pt-4">Total Value Locked (TVL)</div>
-          <div className="font-medium text-gray-800">${totalUSDValue.toFixed(2)}</div>
+          <div className="font-medium text-gray-800">
+            {totalUSDValue !== undefined ? `$${totalUSDValue.toFixed(2)}` : "Loading..."}
+          </div>
           <div className="flex flex-row space-x-5 mt-4">
             <div className="flex-grow">
               <div
