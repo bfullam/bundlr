@@ -9,6 +9,11 @@ import Jazzicon, { jsNumberForAddress } from "react-jazzicon";
 import { useAccount, useChainId } from "wagmi";
 import { useScaffoldContractRead, useScaffoldContractWrite } from "~~/hooks/scaffold-eth";
 
+type ChainInfo = {
+  name: string;
+  protocol: string;
+};
+
 const Home: NextPage = () => {
   const { address: connectedAddress } = useAccount();
   const modalRef = useRef<HTMLDivElement>(null);
@@ -48,31 +53,39 @@ const Home: NextPage = () => {
   const chainId = useChainId();
 
   // Mapping chainId to chainName so we can use the correct subgraph
-  const chainIdToChainName: { [key: number]: string } = {
-    1: "ethereum",
-    31337: "ethereum", // Foundry set to Ethereum subgraph for use when forking mainnet locally
-    100: "gnosis",
-    42161: "arbitrum",
+  const chainInfo: { [key: number]: ChainInfo } = {
+    1: { name: "ethereum", protocol: "uniswap" },
+    31337: { name: "ethereum", protocol: "uniswap" },
+    42161: { name: "arbitrum", protocol: "uniswap" },
+    100: { name: "gnosis", protocol: "sushi" },
   };
 
-  // Use the chainIdToChainName mapping to get the correct subgraph for the chainId
-  const APIURL = `https://api.thegraph.com/subgraphs/name/sushi-v3/v3-${chainIdToChainName[chainId]}`;
+  // Use different subgraph for Gnosis because it's using sushiswap instead of uniswap
+  const APIURL = `https://api.thegraph.com/subgraphs/name/messari/${chainInfo[chainId].protocol}-v3-${chainInfo[chainId].name}`;
+
+  // Gnosis uses XDAI instead of ETH
+  const currentChainGasToken = chainId === 100 ? "XDAI" : "WETH";
 
   // Query to get all the pools on the SushiSwap subgraph
   const tokensQuery = `
     query {
-      pools(first: 1000) {
+      liquidityPools(
+        first: 25,
+        orderBy:totalValueLockedUSD,
+        orderDirection: desc,
+        where: {
+          inputTokens_: { symbol: "${currentChainGasToken}" }
+        }
+      ) {
         id
-        token0 {
+        inputTokens {
           id
           symbol
         }
-        token1 {
-          id
-          symbol
+        fees {
+          feePercentage
+          feeType
         }
-        feeTier
-        liquidity
       }
     }
   `;
@@ -89,29 +102,22 @@ const Home: NextPage = () => {
       query: gql(tokensQuery),
     })
     .then(data => {
-      const tokensThatPairWithEth = data.data.pools.reduce((acc: any, pool: any) => {
-        // Check if the pool is an ETH pool and has liquidity
-        const currentChainEth = chainId === 100 ? "XDAI" : "WETH"; // Gnosis uses XDAI instead of ETH
-        const isEthPool = pool.token0.symbol === currentChainEth || pool.token1.symbol === currentChainEth;
-        const hasLiquidity = pool.liquidity > 0;
-        if (!isEthPool || !hasLiquidity) {
-          return acc;
-        }
-
+      const tokensThatPairWithEth = data.data.liquidityPools.reduce((acc: any, pool: any) => {
         // Organize the data by token, so we can see all the pools for each token with their liquidity and feeTier
-        const nonEthToken = pool.token0.symbol === currentChainEth ? pool.token1 : pool.token0;
+        const nonEthToken = pool.inputTokens.find((token: any) => token.symbol !== currentChainGasToken);
+        const poolFee = pool.fees.find((fee: any) => fee.feeType === "FIXED_TRADING_FEE")?.feePercentage * 10000;
         if (acc[nonEthToken.id]) {
           return {
             ...acc,
             [nonEthToken.id]: {
               ...acc[nonEthToken.id],
-              pools: [...acc[nonEthToken.id].pools, { feeTier: pool.feeTier, liquidity: pool.liquidity }],
+              pools: [...acc[nonEthToken.id].pools, { feeTier: poolFee, liquidity: pool.liquidity }],
             },
           };
         }
         return {
           ...acc,
-          [nonEthToken.id]: { ...nonEthToken, pools: [{ feeTier: pool.feeTier, liquidity: pool.liquidity }] },
+          [nonEthToken.id]: { ...nonEthToken, pools: [{ feeTier: poolFee, liquidity: pool.liquidity }] },
         };
       }, {});
 
@@ -234,17 +240,10 @@ const Home: NextPage = () => {
   }, [modalRef]);
 
   // WRITE FUNCTIONS
-  const {
-    writeAsync: mintNFT,
-    // isLoading: mintNFTIsLoading,
-    // isMining: mintNFTIsMining,
-  } = useScaffoldContractWrite({
+  const { writeAsync: mintNFT } = useScaffoldContractWrite({
     contractName: "BundlrNft",
     functionName: "mint",
     args: [selectedTokens],
-    onBlockConfirmation: txnReceipt => {
-      console.log("Mint transaction blockHash", txnReceipt.blockHash);
-    },
   });
 
   return (
@@ -264,7 +263,13 @@ const Home: NextPage = () => {
                       .map((token: any, index: number) => (
                         <div
                           key={index}
-                          onClick={() => handleTokenSelect(token.symbol, token.id, token.pools[0].feeTier)}
+                          onClick={() => {
+                            const highestLiquidityPool = token.pools.reduce((acc: any, pool: any) =>
+                              pool.liquidity > acc.liquidity ? pool : acc,
+                            );
+
+                            handleTokenSelect(token.symbol, token.id, highestLiquidityPool.feeTier);
+                          }}
                         >
                           <div className="flex flex-row space-x-4">
                             <div>{renderTokenImage(token)}</div>

@@ -8,7 +8,7 @@ import "erc6551/src/interfaces/IERC6551Registry.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 
-address constant SWAP_ROUTER = 0x2E6cd2d30aa43f40aa81619ff4b6E0a41479B13F;
+address constant SWAP_ROUTER = 0xE592427A0AEce92De3Edee1F18E0157C05861564;
 address constant WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
 
 contract BundlrNft is ERC721 {
@@ -25,6 +25,7 @@ contract BundlrNft is ERC721 {
         address token;
         string symbol;
         uint256 balance;
+        uint8 decimalPlaces;
     }
     /*//////////////////////////////////////////////////////////////
                             STATE VARIABLES
@@ -90,7 +91,10 @@ contract BundlrNft is ERC721 {
                 symbol: tokenAllocations[tokenId][i].symbol,
                 balance: IERC20(tokenAllocations[tokenId][i].token).balanceOf(
                     getAccount(tokenId)
-                )
+                ),
+                decimalPlaces: IERC20Extended(
+                    tokenAllocations[tokenId][i].token
+                ).decimals()
             });
         }
         return balances;
@@ -303,4 +307,8 @@ interface ISwapRouter {
 
 interface IBundle6551Implementation {
     function unbundle(address[] calldata _tokens) external;
+}
+
+interface IERC20Extended is IERC20 {
+    function decimals() external view returns (uint8);
 }
