@@ -88,6 +88,7 @@ const Home: NextPage = () => {
           feePercentage
           feeType
         }
+        cumulativeVolumeUSD
       }
     }
   `;
@@ -105,7 +106,7 @@ const Home: NextPage = () => {
     })
     .then(data => {
       const tokensThatPairWithEth = data.data.liquidityPools.reduce((acc: any, pool: any) => {
-        // Organize the data by token, so we can see all the pools for each token with their liquidity and feeTier
+        // Organize the data by token
         const nonEthToken = pool.inputTokens.find((token: any) => token.symbol !== currentChainGasToken);
         const nonEthTokenAddress = getAddress(nonEthToken.id);
         const poolFee = pool.fees.find((fee: any) => fee.feeType === "FIXED_TRADING_FEE")?.feePercentage * 10000;
@@ -114,7 +115,7 @@ const Home: NextPage = () => {
             ...acc,
             [nonEthTokenAddress]: {
               ...acc[nonEthTokenAddress],
-              pools: [...acc[nonEthTokenAddress].pools, { feeTier: poolFee, liquidity: pool.liquidity }],
+              pools: [...acc[nonEthTokenAddress].pools, { feeTier: poolFee, volume: pool.cumulativeVolumeUSD }],
             },
           };
         }
@@ -123,7 +124,7 @@ const Home: NextPage = () => {
           [nonEthTokenAddress]: {
             ...nonEthToken,
             id: nonEthTokenAddress,
-            pools: [{ feeTier: poolFee, liquidity: pool.liquidity }],
+            pools: [{ feeTier: poolFee, volume: pool.cumulativeVolumeUSD }],
           },
         };
       }, {});
@@ -267,11 +268,11 @@ const Home: NextPage = () => {
                         <div
                           key={index}
                           onClick={() => {
-                            const highestLiquidityPool = token.pools.reduce((acc: any, pool: any) =>
-                              pool.liquidity > acc.liquidity ? pool : acc,
+                            const highestVolumePool = token.pools.reduce((acc: any, pool: any) =>
+                              pool.volume > acc.volume ? pool : acc,
                             );
 
-                            handleTokenSelect(token.symbol, token.id, highestLiquidityPool.feeTier);
+                            handleTokenSelect(token.symbol, token.id, highestVolumePool.feeTier);
                           }}
                         >
                           <div className="flex flex-row space-x-4">
