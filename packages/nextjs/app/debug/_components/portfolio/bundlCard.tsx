@@ -2,9 +2,9 @@
 
 // @ts-ignore
 import React, { ChangeEvent, memo, useState } from "react";
-import Image from "next/image";
 import Jazzicon, { jsNumberForAddress } from "react-jazzicon";
 import { formatUnits, parseEther } from "viem";
+import { ImageWithFallback } from "~~/components/ImageWithFallback";
 import { useScaffoldContractWrite } from "~~/hooks/scaffold-eth";
 import { useScaffoldContractRead } from "~~/hooks/scaffold-eth";
 
@@ -41,21 +41,16 @@ export const BundlCard = memo(function BundlCard({ tokenId }: BundlCardProps) {
     return address;
   };
 
-  // Render Jazzicon directly where needed
   const renderTokenImage = (token: any) => {
-    if (!token || !token.symbol) return null;
-    const imagePath = `/cryptocurrency-icons/128/color/${token.symbol.toLowerCase()}.png`;
-
-    try {
-      return <Image src={imagePath} width={50} height={50} alt={token.symbol} />;
-    } catch (error) {
-      console.log("Image not found, error:", error);
-      // Generate a random Ethereum address
-      const address = generateRandomAddress();
-      // Generate a Jazzicon using the random address
-      // @ts-ignore
-      return <Jazzicon diameter={25} seed={jsNumberForAddress(address)} />;
-    }
+    return (
+      <ImageWithFallback
+        src={`https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/${token.token}/logo.png`}
+        fallback={<Jazzicon diameter={50} seed={jsNumberForAddress(generateRandomAddress())} />}
+        width={50}
+        height={50}
+        alt={token.symbol}
+      />
+    );
   };
 
   // This function fetches token prices from the API, ID is the token ID

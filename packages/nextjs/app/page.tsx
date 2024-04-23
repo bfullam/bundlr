@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Image from "next/image";
 import { BundlCard } from "./debug/_components/portfolio/bundlCard";
 import { ApolloClient, InMemoryCache, gql } from "@apollo/client";
 import type { NextPage } from "next";
 import Jazzicon, { jsNumberForAddress } from "react-jazzicon";
+import { getAddress } from "viem";
 import { useAccount, useChainId } from "wagmi";
+import { ImageWithFallback } from "~~/components/ImageWithFallback";
 import { useScaffoldContractRead, useScaffoldContractWrite } from "~~/hooks/scaffold-eth";
 
 type ChainInfo = {
@@ -70,8 +71,8 @@ const Home: NextPage = () => {
   const tokensQuery = `
     query {
       liquidityPools(
-        first: 25,
-        orderBy:totalValueLockedUSD,
+        first: 100,
+        orderBy:cumulativeVolumeUSD,
         orderDirection: desc,
         where: {
           inputTokens_: { symbol: "${currentChainGasToken}" }
@@ -105,19 +106,24 @@ const Home: NextPage = () => {
       const tokensThatPairWithEth = data.data.liquidityPools.reduce((acc: any, pool: any) => {
         // Organize the data by token, so we can see all the pools for each token with their liquidity and feeTier
         const nonEthToken = pool.inputTokens.find((token: any) => token.symbol !== currentChainGasToken);
+        const nonEthTokenAddress = getAddress(nonEthToken.id);
         const poolFee = pool.fees.find((fee: any) => fee.feeType === "FIXED_TRADING_FEE")?.feePercentage * 10000;
-        if (acc[nonEthToken.id]) {
+        if (acc[nonEthTokenAddress]) {
           return {
             ...acc,
-            [nonEthToken.id]: {
-              ...acc[nonEthToken.id],
-              pools: [...acc[nonEthToken.id].pools, { feeTier: poolFee, liquidity: pool.liquidity }],
+            [nonEthTokenAddress]: {
+              ...acc[nonEthTokenAddress],
+              pools: [...acc[nonEthTokenAddress].pools, { feeTier: poolFee, liquidity: pool.liquidity }],
             },
           };
         }
         return {
           ...acc,
-          [nonEthToken.id]: { ...nonEthToken, pools: [{ feeTier: poolFee, liquidity: pool.liquidity }] },
+          [nonEthTokenAddress]: {
+            ...nonEthToken,
+            id: nonEthTokenAddress,
+            pools: [{ feeTier: poolFee, liquidity: pool.liquidity }],
+          },
         };
       }, {});
 
@@ -187,23 +193,16 @@ const Home: NextPage = () => {
     return address;
   };
 
-  // Render Jazzicon directly where needed
   const renderTokenImage = (token: any) => {
-    console.log("token", token);
-    const imagePath = `/cryptocurrency-icons/svg/color/${token.symbol.toLowerCase()}.svg`;
-
-    try {
-      require(imagePath);
-      console.log("path: ", imagePath);
-      return <Image src={imagePath} width={50} height={50} alt={token.symbol} />;
-    } catch (error) {
-      console.log("Image not found, error:", error);
-      // Generate a random Ethereum address
-      const address = generateRandomAddress();
-      // Generate a Jazzicon using the random address
-      // @ts-ignore
-      return <Jazzicon diameter={25} seed={jsNumberForAddress(address)} />;
-    }
+    return (
+      <ImageWithFallback
+        src={`https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/${token.id}/logo.png`}
+        fallback={<Jazzicon diameter={50} seed={jsNumberForAddress(generateRandomAddress())} />}
+        width={50}
+        height={50}
+        alt={token.symbol}
+      />
+    );
   };
 
   const handlePercentageChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
@@ -258,7 +257,7 @@ const Home: NextPage = () => {
                 <div className="max-h-[11rem] overflow-y-auto">
                   {Object.values(pairingTokens).length > 0 ? (
                     Object.values(pairingTokens)
-                      .filter((token: any) => token.symbol) // Filter out ETH
+                      .filter((token: any) => token.symbol) // Filter out tokens with no symbol
                       .sort((a, b) => a.symbol.localeCompare(b.symbol))
                       .map((token: any, index: number) => (
                         <div
