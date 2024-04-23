@@ -148,7 +148,7 @@ export const BundlCard = ({ tokenId }: BundlCardProps) => {
   }
 
   return (
-    <div className="bg-[#dddcd9] bg-opacity-40 px-12 py-10 rounded-md">
+    <div className="bg-[#dddcd9] bg-opacity-40 px-12 py-10 rounded-md text-center">
       <div className="text-lg font-semibold">BAG {tokenId}</div>
       <div className="pt-5">
         {getAllocations?.map((allocation, index) => {
