@@ -157,8 +157,8 @@ export const BagCard = ({ tokenId }: BagCardProps) => {
           return (
             <div key={index}>
               <div className="pb-2">
-                <div className="flex flex-row justify-between">
-                  <div className="flex flex-row space-x-2">
+                <div className="flex flex-row justify-between items-center">
+                  <div className="flex flex-row space-x-2 items-center">
                     {renderTokenImage(allocation)}
                     <div className="font-medium">{allocation?.symbol}</div>
                     <div>
