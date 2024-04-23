@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { BundlCard } from "./debug/_components/portfolio/bundlCard";
+import { BundlCard } from "../components/bundlCard";
 import { ApolloClient, InMemoryCache, gql } from "@apollo/client";
 import type { NextPage } from "next";
 import Jazzicon, { jsNumberForAddress } from "react-jazzicon";
@@ -16,14 +16,14 @@ type ChainInfo = {
 };
 
 const Home: NextPage = () => {
-  const { address: connectedAddress } = useAccount();
+  const connectedAccount = useAccount();
   const modalRef = useRef<HTMLDivElement>(null);
 
   // READ FUNCTIONS
   const { data: tokenlist } = useScaffoldContractRead({
     contractName: "BundlrNft",
     functionName: "getAllTokens",
-    args: [connectedAddress],
+    args: [connectedAccount.address],
   });
 
   // STATE FUNCTIONS
@@ -307,19 +307,38 @@ const Home: NextPage = () => {
 
             <div>
               <button
-                className="bg-gray-800 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded mt-5"
+                className={`bg-gray-800 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded mt-5 ${
+                  !connectedAccount.isConnected ? "opacity-50 hover:bg-gray-800" : ""
+                }`}
                 onClick={openModal}
+                disabled={!connectedAccount.isConnected}
               >
                 Create
               </button>
             </div>
           </div>
           <div className="grid grid-cols-3 gap-4 pt-8">
-            {tokenlist?.map((token, index) => (
-              <div key={index}>
-                <BundlCard tokenId={token.toString()} />
+            {tokenlist &&
+              tokenlist[0] &&
+              tokenlist[0] !== 1n &&
+              tokenlist?.map((token, index) => (
+                <div key={index}>
+                  <BundlCard tokenId={token.toString()} />
+                </div>
+              ))}
+            {(tokenlist?.length === 0 || !tokenlist) && (
+              // If there are no tokens in the list, display a nice centered message encouraging the user to create one
+              <div className="flex flex-col items-center justify-center col-span-3 pt-16">
+                <div className="text-2xl font-bold">
+                  {connectedAccount.isConnected ? "You don't have any bags!" : "You're not connected!"}
+                </div>
+                <div className="text-lg font-semibold text-center">
+                  {connectedAccount.isConnected
+                    ? 'Click "Create" to create a new bag and diversify your investments'
+                    : "Connect your wallet to create and view your bags"}
+                </div>
               </div>
-            ))}
+            )}
           </div>
         </div>
       </div>

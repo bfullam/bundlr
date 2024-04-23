@@ -128,96 +128,94 @@ export const BundlCard = memo(function BundlCard({ tokenId }: BundlCardProps) {
   }
 
   return (
-    <>
-      <div className="bg-[#dddcd9] bg-opacity-40 px-12 py-10 rounded-md">
-        <div className="text-lg font-semibold">{bagNames[Number(tokenId) - 1]}</div>
-        <div className="pt-5">
-          {getAllocations?.map((allocation, index) => {
-            // Calculate the index of the next bag name
-            return (
-              <div key={index}>
-                <div className="pb-2">
-                  <div className="flex flex-row justify-between">
-                    <div className="flex flex-row space-x-2">
-                      {renderTokenImage(allocation)}
-                      <div className="font-medium">{allocation?.symbol}</div>
-                      <div>
-                        {getAllocationBalances?.[index]?.balance
-                          ? `${Number(
-                              formatUnits(
-                                getAllocationBalances[index].balance,
-                                getAllocationBalances[index].decimalPlaces,
-                              ),
-                            ).toFixed(5)}...`
-                          : "No balance available"}
-                      </div>
+    <div className="bg-[#dddcd9] bg-opacity-40 px-12 py-10 rounded-md">
+      <div className="text-lg font-semibold">{bagNames[Number(tokenId) - 1]}</div>
+      <div className="pt-5">
+        {getAllocations?.map((allocation, index) => {
+          // Calculate the index of the next bag name
+          return (
+            <div key={index}>
+              <div className="pb-2">
+                <div className="flex flex-row justify-between">
+                  <div className="flex flex-row space-x-2">
+                    {renderTokenImage(allocation)}
+                    <div className="font-medium">{allocation?.symbol}</div>
+                    <div>
+                      {getAllocationBalances?.[index]?.balance
+                        ? `${Number(
+                            formatUnits(
+                              getAllocationBalances[index].balance,
+                              getAllocationBalances[index].decimalPlaces,
+                            ),
+                          ).toFixed(5)}...`
+                        : "No balance available"}
                     </div>
-                    <div className="font-medium">{allocation?.percentage}%</div>
                   </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-        <div>
-          {isModalOpen && (
-            <div className="fixed inset-0 bg-black bg-opacity-10 flex justify-center items-center z-30">
-              <div className="bg-white p-5 rounded-lg">
-                <h2 className="text-lg font-semibold">Funding amount</h2>
-                <h2 className="text-md w-[20rem]">
-                  Specify the ETH amount you wish to invest, and we will automatically exchange it to rebalance your
-                  portfolio according to predetermined token weights.
-                </h2>
-                <input
-                  type="text"
-                  value={fundAmount}
-                  onChange={handleFundInput}
-                  className="border border-gray-300 rounded-md p-2 mt-2 w-full"
-                />
-                <div className="flex flex-row justify-between mt-4">
-                  <button
-                    className="flex-grow bg-gray-800 hover:bg-gray-900 text-white font-bold py-2 px-6 rounded mr-2" // Added flex-grow class
-                    onClick={() => {
-                      fundNftWithEth();
-                      setIsModalOpen(false);
-                    }}
-                  >
-                    Fund
-                  </button>
-                  <button
-                    className="flex-grow bg-red-300 hover:bg-red-700 text-white font-bold py-2 px-6 rounded ml-2" // Added flex-grow class
-                    onClick={closeModal}
-                  >
-                    Cancel
-                  </button>
+                  <div className="font-medium">{allocation?.percentage}%</div>
                 </div>
               </div>
             </div>
-          )}
-          <div className="font-semibold pt-4">Total Value Locked (TVL)</div>
-          <div className="font-medium text-gray-800">
-            {totalUSDValue !== undefined ? `$${totalUSDValue.toFixed(2)}` : "Loading..."}
+          );
+        })}
+      </div>
+      <div>
+        {isModalOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-10 flex justify-center items-center z-30">
+            <div className="bg-white p-5 rounded-lg">
+              <h2 className="text-lg font-semibold">Funding amount</h2>
+              <h2 className="text-md w-[20rem]">
+                Specify the ETH amount you wish to invest, and we will automatically exchange it to rebalance your
+                portfolio according to predetermined token weights.
+              </h2>
+              <input
+                type="text"
+                value={fundAmount}
+                onChange={handleFundInput}
+                className="border border-gray-300 rounded-md p-2 mt-2 w-full"
+              />
+              <div className="flex flex-row justify-between mt-4">
+                <button
+                  className="flex-grow bg-gray-800 hover:bg-gray-900 text-white font-bold py-2 px-6 rounded mr-2" // Added flex-grow class
+                  onClick={() => {
+                    fundNftWithEth();
+                    setIsModalOpen(false);
+                  }}
+                >
+                  Fund
+                </button>
+                <button
+                  className="flex-grow bg-red-300 hover:bg-red-700 text-white font-bold py-2 px-6 rounded ml-2" // Added flex-grow class
+                  onClick={closeModal}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
           </div>
-          <div className="flex flex-row space-x-5 mt-4">
-            <div className="flex-grow">
-              <div
-                className="w-full bg-gray-200 border border-gray-500 hover:bg-gray-50 text-gray-700 font-bold py-2 px-8 rounded cursor-pointer"
-                onClick={openModal}
-              >
-                Fund
-              </div>
+        )}
+        <div className="font-semibold pt-4">Total Value Locked (TVL)</div>
+        <div className="font-medium text-gray-800">
+          {totalUSDValue !== undefined ? `$${totalUSDValue.toFixed(2)}` : "Loading..."}
+        </div>
+        <div className="flex flex-row space-x-5 mt-4">
+          <div className="flex-grow">
+            <div
+              className="w-full bg-gray-200 border border-gray-500 hover:bg-gray-50 text-gray-700 font-bold py-2 px-8 rounded cursor-pointer"
+              onClick={openModal}
+            >
+              Fund
             </div>
-            <div className="flex-grow">
-              <div
-                className="w-full bg-gray-200 border border-gray-500 hover:bg-gray-50 text-gray-700 font-bold py-2 px-4 rounded"
-                onClick={() => unbundleNftAssets()}
-              >
-                Liquidate
-              </div>
+          </div>
+          <div className="flex-grow">
+            <div
+              className="w-full bg-gray-200 border border-gray-500 hover:bg-gray-50 text-gray-700 font-bold py-2 px-4 rounded"
+              onClick={() => unbundleNftAssets()}
+            >
+              Liquidate
             </div>
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 });
