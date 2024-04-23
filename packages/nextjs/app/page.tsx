@@ -59,14 +59,14 @@ const Home: NextPage = () => {
     1: { name: "ethereum", protocol: "uniswap" },
     31337: { name: "ethereum", protocol: "uniswap" },
     42161: { name: "arbitrum", protocol: "uniswap" },
-    100: { name: "gnosis", protocol: "sushi" },
+    100: { name: "gnosis", protocol: "sushiswap" },
   };
 
   // Use different subgraph for Gnosis because it's using sushiswap instead of uniswap
   const APIURL = `https://api.thegraph.com/subgraphs/name/messari/${chainInfo[chainId].protocol}-v3-${chainInfo[chainId].name}`;
 
   // Gnosis uses XDAI instead of ETH
-  const currentChainGasToken = chainId === 100 ? "XDAI" : "WETH";
+  const currentChainGasToken = chainId === 100 ? "WXDAI" : "WETH";
 
   // Query to get all the pools on the SushiSwap subgraph
   const tokensQuery = `
