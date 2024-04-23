@@ -1,7 +1,7 @@
 "use client";
 
 // @ts-ignore
-import React, { ChangeEvent, memo, useState } from "react";
+import React, { ChangeEvent, useState } from "react";
 import Jazzicon, { jsNumberForAddress } from "react-jazzicon";
 import { formatUnits, parseEther } from "viem";
 import { ImageWithFallback } from "~~/components/ImageWithFallback";
@@ -18,7 +18,7 @@ type TokenBalance = {
   decimalPlaces: number;
 };
 
-export const BundlCard = memo(function BundlCard({ tokenId }: BundlCardProps) {
+export const BundlCard = ({ tokenId }: BundlCardProps) => {
   // STATES
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [fundAmount, setFundAmount] = useState("");
@@ -218,4 +218,4 @@ export const BundlCard = memo(function BundlCard({ tokenId }: BundlCardProps) {
       </div>
     </div>
   );
-});
+};

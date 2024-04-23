@@ -24,6 +24,7 @@ const Home: NextPage = () => {
     contractName: "BundlrNft",
     functionName: "getAllTokens",
     args: [connectedAccount.address],
+    watch: true,
   });
 
   // STATE FUNCTIONS
@@ -143,7 +144,7 @@ const Home: NextPage = () => {
     const tokenIndex = selectedTokens.findIndex(token => token.token === id);
     if (tokenIndex !== -1) {
       // Token is already selected, deselect it
-      const updatedTokens = [...selectedTokens].splice(tokenIndex, 1);
+      const updatedTokens = selectedTokens.filter(token => token.token !== id);
       setSelectedTokens(updatedTokens);
     } else {
       // Token is not selected, add it to the list and set percentages of all tokens to be equal
@@ -318,14 +319,11 @@ const Home: NextPage = () => {
             </div>
           </div>
           <div className="grid grid-cols-3 gap-4 pt-8">
-            {tokenlist &&
-              tokenlist[0] &&
-              tokenlist[0] !== 1n &&
-              tokenlist?.map((token, index) => (
-                <div key={index}>
-                  <BundlCard tokenId={token.toString()} />
-                </div>
-              ))}
+            {tokenlist?.map((token, index) => (
+              <div key={index}>
+                <BundlCard tokenId={token.toString()} />
+              </div>
+            ))}
             {(tokenlist?.length === 0 || !tokenlist) && (
               // If there are no tokens in the list, display a nice centered message encouraging the user to create one
               <div className="flex flex-col items-center justify-center col-span-3 pt-16">
