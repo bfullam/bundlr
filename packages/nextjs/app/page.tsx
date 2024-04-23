@@ -143,16 +143,19 @@ const Home: NextPage = () => {
     const tokenIndex = selectedTokens.findIndex(token => token.token === id);
     if (tokenIndex !== -1) {
       // Token is already selected, deselect it
-      const updatedTokens = [...selectedTokens];
-      updatedTokens.splice(tokenIndex, 1);
+      const updatedTokens = [...selectedTokens].splice(tokenIndex, 1);
       setSelectedTokens(updatedTokens);
-      // Remove the percentage for the deselected token
-      const updatedInputs = percentageInputs.filter(input => input.token !== id);
-      setPercentageInputs(updatedInputs);
     } else {
+      // Token is not selected, add it to the list and set percentages of all tokens to be equal
+      const newTokenInputs = [...selectedTokens, { token: id, symbol, poolFee: parseInt(fee) }].map(input => {
+        return { ...input, percentage: Math.floor(100 / (selectedTokens.length + 1)) };
+      });
+      // If the sum of all percentages is less than 100, add the remaining percentage to the first token
+      const remainingPercentage = 100 - newTokenInputs.reduce((acc, input) => acc + input.percentage, 0);
+      newTokenInputs[0].percentage += remainingPercentage;
+
       // Token is not selected, add it to the list and initialize its percentage input
-      setSelectedTokens([...selectedTokens, { token: id, symbol, percentage: 50, poolFee: parseInt(fee) }]);
-      setPercentageInputs([...percentageInputs, { token: id, percentage: 50 }]); // Initialize the percentage input for the selected token
+      setSelectedTokens(newTokenInputs);
     }
   };
 
@@ -160,7 +163,7 @@ const Home: NextPage = () => {
     // Convert pairingTokens object into an array of its values
     const pairingTokensArray = Object.values(pairingTokens);
 
-    return percentageInputs.map((input, index) => {
+    return selectedTokens.map((input, index) => {
       // Find the token object with the matching address
       const tokenObject = pairingTokensArray.find(token => token.id === input.token);
       // Get the symbol from the token object
@@ -251,10 +254,10 @@ const Home: NextPage = () => {
         <div>
           {isModalOpen && (
             <div className="fixed inset-0 bg-black bg-opacity-10 flex justify-center items-center z-30">
-              <div ref={modalRef} className="bg-white p-5 rounded-lg max-h-96 overflow-y-auto max-w-md w-full mx-auto">
+              <div ref={modalRef} className="bg-white p-5 rounded-lg overflow-y-auto max-w-md w-full mx-auto">
                 <h2 className="text-lg font-semibold">Select Tokens</h2>
                 <h3 className="text-md pb-6">Tailor your bag to suit your preferences.</h3>
-                <div className="max-h-[11rem] overflow-y-auto">
+                <div className="max-h-[12rem] overflow-y-auto">
                   {Object.values(pairingTokens).length > 0 ? (
                     Object.values(pairingTokens)
                       .filter((token: any) => token.symbol) // Filter out tokens with no symbol
