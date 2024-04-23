@@ -31,8 +31,6 @@ export const BundlCard = ({ tokenId }: BundlCardProps) => {
   const [fundAmount, setFundAmount] = useState("");
   const [totalUSDValue, setTotalUSDValue] = useState() as any;
 
-  const bagNames = ["Alpha", "Beta", "Gamma", "Delta", "Epsilon", "Zeta", "Eta", "Theta", "Iota", "Kappa"];
-
   // Mapping chainId to chainName so we can use the correct subgraph
   const chainInfo: { [key: number]: ChainInfo } = {
     1: { name: "ethereum", protocol: "uniswap" },
@@ -151,7 +149,7 @@ export const BundlCard = ({ tokenId }: BundlCardProps) => {
 
   return (
     <div className="bg-[#dddcd9] bg-opacity-40 px-12 py-10 rounded-md">
-      <div className="text-lg font-semibold">{bagNames[Number(tokenId) - 1]}</div>
+      <div className="text-lg font-semibold">BAG {tokenId}</div>
       <div className="pt-5">
         {getAllocations?.map((allocation, index) => {
           // Calculate the index of the next bag name
