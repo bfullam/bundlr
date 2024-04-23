@@ -4,12 +4,18 @@
 import React, { ChangeEvent, useState } from "react";
 import Jazzicon, { jsNumberForAddress } from "react-jazzicon";
 import { formatUnits, parseEther } from "viem";
+import { useChainId } from "wagmi";
 import { ImageWithFallback } from "~~/components/ImageWithFallback";
 import { useScaffoldContractWrite } from "~~/hooks/scaffold-eth";
 import { useScaffoldContractRead } from "~~/hooks/scaffold-eth";
 
 type BundlCardProps = {
   tokenId: string;
+};
+
+type ChainInfo = {
+  name: string;
+  protocol: string;
 };
 
 type TokenBalance = {
@@ -19,12 +25,21 @@ type TokenBalance = {
 };
 
 export const BundlCard = ({ tokenId }: BundlCardProps) => {
+  const chainId = useChainId();
   // STATES
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [fundAmount, setFundAmount] = useState("");
   const [totalUSDValue, setTotalUSDValue] = useState() as any;
 
   const bagNames = ["Alpha", "Beta", "Gamma", "Delta", "Epsilon", "Zeta", "Eta", "Theta", "Iota", "Kappa"];
+
+  // Mapping chainId to chainName so we can use the correct subgraph
+  const chainInfo: { [key: number]: ChainInfo } = {
+    1: { name: "ethereum", protocol: "uniswap" },
+    31337: { name: "ethereum", protocol: "uniswap" },
+    42161: { name: "arbitrum", protocol: "uniswap" },
+    100: { name: "gnosis", protocol: "sushi" },
+  };
 
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => setIsModalOpen(false);
@@ -44,7 +59,7 @@ export const BundlCard = ({ tokenId }: BundlCardProps) => {
   const renderTokenImage = (token: any) => {
     return (
       <ImageWithFallback
-        src={`https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/${token.token}/logo.png`}
+        src={`https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/${chainInfo[chainId].name}/assets/${token.token}/logo.png`}
         fallback={<Jazzicon diameter={50} seed={jsNumberForAddress(generateRandomAddress())} />}
         width={50}
         height={50}
@@ -124,7 +139,14 @@ export const BundlCard = ({ tokenId }: BundlCardProps) => {
   });
 
   if (getAllocationBalances && totalUSDValue === undefined) {
-    getPrices(getAllocationBalances?.map(({ symbol, balance, decimalPlaces }) => ({ symbol, balance, decimalPlaces }))); // Call the function on component mount or when tokenId changes
+    const atLeastOneTokenHasBalance = getAllocationBalances.some(allocation => allocation.balance !== BigInt(0));
+    if (!atLeastOneTokenHasBalance) {
+      setTotalUSDValue(0);
+    } else {
+      getPrices(
+        getAllocationBalances?.map(({ symbol, balance, decimalPlaces }) => ({ symbol, balance, decimalPlaces })),
+      );
+    }
   }
 
   return (

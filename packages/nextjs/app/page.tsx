@@ -201,7 +201,7 @@ const Home: NextPage = () => {
   const renderTokenImage = (token: any) => {
     return (
       <ImageWithFallback
-        src={`https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/${token.id}/logo.png`}
+        src={`https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/${chainInfo[chainId].name}/assets/${token.id}/logo.png`}
         fallback={<Jazzicon diameter={50} seed={jsNumberForAddress(generateRandomAddress())} />}
         width={50}
         height={50}
