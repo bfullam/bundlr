@@ -229,7 +229,7 @@ export const BagCard = ({ tokenId }: BagCardProps) => {
           </div>
           <div className="flex-grow">
             <div
-              className="w-full bg-gray-200 border border-gray-500 hover:bg-gray-50 text-gray-700 font-bold py-2 px-4 rounded"
+              className="w-full bg-gray-200 border border-gray-500 hover:bg-gray-50 text-gray-700 font-bold py-2 px-4 rounded cursor-pointer"
               onClick={() => unbundleNftAssets()}
             >
               Liquidate
