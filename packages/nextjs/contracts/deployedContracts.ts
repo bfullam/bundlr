@@ -7,7 +7,7 @@ import { GenericContractsDeclaration } from "~~/utils/scaffold-eth/contract";
 const deployedContracts = {
   100: {
     Bundle6551Implementation: {
-      address: "0xA74dB94F04DBcb807650c6eEf9f3AE235F0795d9",
+      address: "0x3D7D7B847BF22009e02769E475C137d215adb0dF",
       abi: [
         {
           type: "receive",
@@ -273,7 +273,7 @@ const deployedContracts = {
       inheritedFunctions: {},
     },
     BundlrNft: {
-      address: "0xA156ff8a642AB3Aa2635Ba40c5c96570607E54Ec",
+      address: "0x3faD711398399abc798356AAB015789A11E530A9",
       abi: [
         {
           type: "constructor",
@@ -1983,7 +1983,7 @@ const deployedContracts = {
   },
   42161: {
     Bundle6551Implementation: {
-      address: "0x3faD711398399abc798356AAB015789A11E530A9",
+      address: "0x007Ed7Bc73CF56050db8a261E14dc973825D2663",
       abi: [
         {
           type: "receive",
@@ -2249,7 +2249,7 @@ const deployedContracts = {
       inheritedFunctions: {},
     },
     BundlrNft: {
-      address: "0x54e0141FEA3feC1b6f7dd31cf2046B1B67AE562e",
+      address: "0x9Fa433656a0650918c5Ec00887c38E8D3B6a4ee0",
       abi: [
         {
           type: "constructor",
@@ -3959,7 +3959,7 @@ const deployedContracts = {
   },
   11155111: {
     Bundle6551Implementation: {
-      address: "0xa3f9b406630BE2e562D102796202c01567cDAB49",
+      address: "0xaee4A2eD2566d2a79920b329da939Fe305BF673C",
       abi: [
         {
           type: "receive",
@@ -4225,7 +4225,7 @@ const deployedContracts = {
       inheritedFunctions: {},
     },
     BundlrNft: {
-      address: "0xAf694665a3049A4f444916c760db94182DF2ac0b",
+      address: "0x3176DD51e66fA562a785056C6857033078D7A26D",
       abi: [
         {
           type: "constructor",
