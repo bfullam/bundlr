@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { BundlCard } from "../components/bundlCard";
+import { BagCard } from "../components/BagCard";
 import { ApolloClient, InMemoryCache, gql } from "@apollo/client";
 import type { NextPage } from "next";
 import Jazzicon, { jsNumberForAddress } from "react-jazzicon";
@@ -322,7 +322,7 @@ const Home: NextPage = () => {
           <div className="grid grid-cols-3 gap-4 pt-8">
             {tokenlist?.map((token, index) => (
               <div key={index}>
-                <BundlCard tokenId={token.toString()} />
+                <BagCard tokenId={token.toString()} />
               </div>
             ))}
             {(tokenlist?.length === 0 || !tokenlist) && (

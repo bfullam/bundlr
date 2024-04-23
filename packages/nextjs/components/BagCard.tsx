@@ -9,7 +9,7 @@ import { ImageWithFallback } from "~~/components/ImageWithFallback";
 import { useScaffoldContractWrite } from "~~/hooks/scaffold-eth";
 import { useScaffoldContractRead } from "~~/hooks/scaffold-eth";
 
-type BundlCardProps = {
+type BagCardProps = {
   tokenId: string;
 };
 
@@ -24,7 +24,7 @@ type TokenBalance = {
   decimalPlaces: number;
 };
 
-export const BundlCard = ({ tokenId }: BundlCardProps) => {
+export const BagCard = ({ tokenId }: BagCardProps) => {
   const chainId = useChainId();
   // STATES
   const [isModalOpen, setIsModalOpen] = useState(false);
