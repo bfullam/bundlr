@@ -60,6 +60,7 @@ const Home: NextPage = () => {
     31337: { name: "ethereum", protocol: "uniswap" },
     42161: { name: "arbitrum", protocol: "uniswap" },
     100: { name: "gnosis", protocol: "sushiswap" },
+    59144: { name: "linea", protocol: "sushiswap" },
   };
 
   // Use different subgraph for Gnosis because it's using sushiswap instead of uniswap

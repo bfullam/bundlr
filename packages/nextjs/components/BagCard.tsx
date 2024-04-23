@@ -37,6 +37,7 @@ export const BagCard = ({ tokenId }: BagCardProps) => {
     31337: { name: "ethereum", protocol: "uniswap" },
     42161: { name: "arbitrum", protocol: "uniswap" },
     100: { name: "gnosis", protocol: "sushi" },
+    59144: { name: "linea", protocol: "sushiswap" },
   };
 
   const openModal = () => setIsModalOpen(true);
