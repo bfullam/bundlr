@@ -995,7 +995,7 @@ const deployedContracts = {
   },
   31337: {
     Bundle6551Implementation: {
-      address: "0xf93b0549cD50c849D792f0eAE94A598fA77C7718",
+      address: "0x0165878A594ca255338adfa4d48449f69242Eb8F",
       abi: [
         {
           type: "receive",
@@ -1261,7 +1261,7 @@ const deployedContracts = {
       inheritedFunctions: {},
     },
     BundlrNft: {
-      address: "0x8CeA85eC7f3D314c4d144e34F2206C8Ac0bbadA1",
+      address: "0xa513E6E4b8f2a923D98304ec87F64353C4D5C853",
       abi: [
         {
           type: "constructor",

@@ -60,17 +60,113 @@ const Home: NextPage = () => {
     31337: { name: "ethereum", protocol: "uniswap" },
     42161: { name: "arbitrum", protocol: "uniswap" },
     100: { name: "gnosis", protocol: "sushiswap" },
-    59144: { name: "linea", protocol: "sushiswap" },
+    59144: { name: "linea", protocol: "pancakeswap" },
   };
 
-  // Use different subgraph for Gnosis because it's using sushiswap instead of uniswap
-  const APIURL = `https://api.thegraph.com/subgraphs/name/messari/${chainInfo[chainId].protocol}-v3-${chainInfo[chainId].name}`;
+  if (chainInfo[chainId].name === "linea") {
+    // Use PancakeSwap subgraph for Linea
+    const APIURL = "https://graph-query.linea.build/subgraphs/name/pancakeswap/exchange-v3-linea";
 
-  // Gnosis uses XDAI instead of ETH
-  const currentChainGasToken = chainId === 100 ? "WXDAI" : "WETH";
+    // Query to get all the tokens on the PancakeSwap subgraph
+    const queryPoolsWithToken0WETH = `
+      query PoolsWithToken0WETH {
+        pools(first: 5, orderBy: volumeUSD, orderDirection: desc, where: { token0_: { symbol: "WETH" } }) {
+          id
+          token0 {
+            id
+            symbol
+          }
+          token1 {
+            id
+            symbol
+          }
+          volumeUSD
+          feeTier
+          liquidity
+        }
+      }
+    `;
 
-  // Query to get all the pools on the SushiSwap subgraph
-  const tokensQuery = `
+    const queryPoolsWithToken1WETH = `
+      query PoolsWithToken1WETH {
+        pools(first: 5, orderBy: volumeUSD, orderDirection: desc, where: { token1_: { symbol: "WETH" } }) {
+          id
+          token0 {
+            id
+            symbol
+          }
+          token1 {
+            id
+            symbol
+          }
+          volumeUSD
+          feeTier
+          liquidity
+        }
+      }
+    `;
+
+    // Create a new ApolloClient to fetch data from the subgraph
+    const client = new ApolloClient({
+      uri: APIURL,
+      cache: new InMemoryCache(),
+    });
+
+    Promise.all([
+      client.query({ query: gql(queryPoolsWithToken0WETH) }),
+      client.query({ query: gql(queryPoolsWithToken1WETH) }),
+    ])
+      .then(([resultWithToken0WETH, resultWithToken1WETH]) => {
+        const tokensThatPairWithEth = [...resultWithToken0WETH.data.pools, ...resultWithToken1WETH.data.pools].reduce(
+          (acc: any, pool: any) => {
+            // Organize the data by token
+            const nonEthToken = pool.token0.symbol !== "WETH" ? pool.token0 : pool.token1;
+            const nonEthTokenAddress = getAddress(nonEthToken.id);
+            if (acc[nonEthTokenAddress]) {
+              return {
+                ...acc,
+                [nonEthTokenAddress]: {
+                  ...acc[nonEthTokenAddress],
+                  pools: [
+                    ...acc[nonEthTokenAddress].pools,
+                    { feeTier: pool.feeTier, volume: pool.volumeUSD, liquidity: pool.liquidity },
+                  ],
+                },
+              };
+            }
+            return {
+              ...acc,
+              [nonEthTokenAddress]: {
+                ...nonEthToken,
+                id: nonEthTokenAddress,
+                pools: [{ feeTier: pool.feeTier, volume: pool.volumeUSD, liquidity: pool.liquidity }],
+              },
+            };
+          },
+          {},
+        );
+        console.log(tokensThatPairWithEth);
+
+        // If the pairingTokens array is empty or the chainId has changed, update the state
+        if (pairingTokens.length === 0 || pairingTokensChainId !== chainId) {
+          setPairingTokens(tokensThatPairWithEth);
+          setPairingTokensChainId(chainId);
+        }
+      })
+      .catch(error => {
+        console.error("Error fetching data:", error);
+      });
+
+    // Fetch the data from the subgraph
+  } else {
+    // Use different subgraph for Gnosis because it's using sushiswap instead of uniswap
+    const APIURL = `https://api.thegraph.com/subgraphs/name/messari/${chainInfo[chainId].protocol}-v3-${chainInfo[chainId].name}`;
+
+    // Gnosis uses XDAI instead of ETH
+    const currentChainGasToken = chainId === 100 ? "WXDAI" : "WETH";
+
+    // Query to get all the pools on the SushiSwap subgraph
+    const tokensQuery = `
     query {
       liquidityPools(
         first: 100,
@@ -94,51 +190,52 @@ const Home: NextPage = () => {
     }
   `;
 
-  // Create a new ApolloClient to fetch data from the subgraph
-  const client = new ApolloClient({
-    uri: APIURL,
-    cache: new InMemoryCache(),
-  });
+    // Create a new ApolloClient to fetch data from the subgraph
+    const client = new ApolloClient({
+      uri: APIURL,
+      cache: new InMemoryCache(),
+    });
 
-  // Fetch the data from the subgraph
-  client
-    .query({
-      query: gql(tokensQuery),
-    })
-    .then(data => {
-      const tokensThatPairWithEth = data.data.liquidityPools.reduce((acc: any, pool: any) => {
-        // Organize the data by token
-        const nonEthToken = pool.inputTokens.find((token: any) => token.symbol !== currentChainGasToken);
-        const nonEthTokenAddress = getAddress(nonEthToken.id);
-        const poolFee = pool.fees.find((fee: any) => fee.feeType === "FIXED_TRADING_FEE")?.feePercentage * 10000;
-        if (acc[nonEthTokenAddress]) {
+    // Fetch the data from the subgraph
+    client
+      .query({
+        query: gql(tokensQuery),
+      })
+      .then(data => {
+        const tokensThatPairWithEth = data.data.liquidityPools.reduce((acc: any, pool: any) => {
+          // Organize the data by token
+          const nonEthToken = pool.inputTokens.find((token: any) => token.symbol !== currentChainGasToken);
+          const nonEthTokenAddress = getAddress(nonEthToken.id);
+          const poolFee = pool.fees.find((fee: any) => fee.feeType === "FIXED_TRADING_FEE")?.feePercentage * 10000;
+          if (acc[nonEthTokenAddress]) {
+            return {
+              ...acc,
+              [nonEthTokenAddress]: {
+                ...acc[nonEthTokenAddress],
+                pools: [...acc[nonEthTokenAddress].pools, { feeTier: poolFee, volume: pool.cumulativeVolumeUSD }],
+              },
+            };
+          }
           return {
             ...acc,
             [nonEthTokenAddress]: {
-              ...acc[nonEthTokenAddress],
-              pools: [...acc[nonEthTokenAddress].pools, { feeTier: poolFee, volume: pool.cumulativeVolumeUSD }],
+              ...nonEthToken,
+              id: nonEthTokenAddress,
+              pools: [{ feeTier: poolFee, volume: pool.cumulativeVolumeUSD }],
             },
           };
-        }
-        return {
-          ...acc,
-          [nonEthTokenAddress]: {
-            ...nonEthToken,
-            id: nonEthTokenAddress,
-            pools: [{ feeTier: poolFee, volume: pool.cumulativeVolumeUSD }],
-          },
-        };
-      }, {});
+        }, {});
 
-      // If the pairingTokens array is empty or the chainId has changed, update the state
-      if (pairingTokens.length === 0 || pairingTokensChainId !== chainId) {
-        setPairingTokens(tokensThatPairWithEth);
-        setPairingTokensChainId(chainId);
-      }
-    })
-    .catch(err => {
-      console.log("Error fetching data: ", err);
-    });
+        // If the pairingTokens array is empty or the chainId has changed, update the state
+        if (pairingTokens.length === 0 || pairingTokensChainId !== chainId) {
+          setPairingTokens(tokensThatPairWithEth);
+          setPairingTokensChainId(chainId);
+        }
+      })
+      .catch(err => {
+        console.log("Error fetching data: ", err);
+      });
+  }
 
   // UTILS
 
