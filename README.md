@@ -1,4 +1,4 @@
-# 🎁 Bags
+# 🎁 Bags 
 
 ## Project Description
 Bags is shaking up the NFT game. Picture this: NFTs with their own wallets, calling the shots based on how you told them to manage your assets. Yep, that's Bags. Using the ERC-6551 standard, we're giving NFTs the power to manage their wallets, decide where incoming ETH goes, and convert it into tokens you choose.
@@ -103,7 +103,7 @@ This command deploys a test smart contract to the local network. The contract is
 4. On a third terminal, start your NextJS app:
 
 ```
-yarn start
+ yarn start
 ```
 
 Visit your app on: `http://localhost:3000`. You can interact with your smart contract using the `Debug Contracts` page. You can tweak the app config in `packages/nextjs/scaffold.config.ts`.
